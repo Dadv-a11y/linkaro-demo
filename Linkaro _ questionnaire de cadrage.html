@@ -1,0 +1,968 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <title>Linkaro : questionnaire de cadrage</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;600;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #07080d;
+        --fg: #eef0f7;
+        --mut: #9aa0b8;
+        --card: #11131c;
+        --line: #282b3d;
+        --a: #2ee6d2;
+        --b: #8b6cff;
+        --on: #04110f;
+        --err: #ff7a8a;
+        box-sizing: border-box;
+        padding-top: env(safe-area-inset-top, 0px);
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+      }
+      @media (prefers-color-scheme: light) {
+        :root:not([data-theme="dark"]) {
+          --bg: #f5f6fb;
+          --fg: #12142a;
+          --mut: #5b6078;
+          --card: #fff;
+          --line: #d5d9e8;
+          --a: #0b8f83;
+          --b: #5b3fd6;
+          --on: #fff;
+          --err: #c0223b;
+        }
+      }
+      :root[data-theme="light"] {
+        --bg: #f5f6fb;
+        --fg: #12142a;
+        --mut: #5b6078;
+        --card: #fff;
+        --line: #d5d9e8;
+        --a: #0b8f83;
+        --b: #5b3fd6;
+        --on: #fff;
+        --err: #c0223b;
+      }
+      *,
+      *::before,
+      *::after {
+        box-sizing: inherit;
+      }
+      html {
+        scroll-padding-top: calc(env(safe-area-inset-top, 0px) + 70px);
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--fg);
+        font:
+          400 16px/1.55 "Bricolage Grotesque",
+          system-ui,
+          sans-serif;
+      }
+      [hidden] {
+        display: none !important;
+      }
+      header {
+        position: sticky;
+        top: env(safe-area-inset-top, 0px);
+        z-index: 5;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 14px 20px;
+        background: var(--bg);
+      }
+      .logo {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 800;
+        font-size: 19px;
+        letter-spacing: -0.02em;
+      }
+      .logo-mark {
+        width: 32px;
+        height: 32px;
+        flex: none;
+        color: var(--a);
+      }
+      #pt {
+        font-size: 14px;
+        color: var(--mut);
+      }
+      .bar {
+        height: 3px;
+        background: var(--line);
+      }
+      .bar i {
+        display: block;
+        height: 100%;
+        width: 0;
+        background: linear-gradient(90deg, var(--a), var(--b));
+        transition: width 0.4s;
+      }
+      main {
+        max-width: 640px;
+        margin: 0 auto;
+        padding: 28px 20px 60px;
+      }
+      main.in {
+        animation: f 0.35s ease-out;
+      }
+      @keyframes f {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+      h1 {
+        font-size: clamp(32px, 8vw, 48px);
+        line-height: 1.05;
+        letter-spacing: -0.03em;
+        font-weight: 800;
+        margin: 0.4em 0;
+      }
+      h2 {
+        font-size: 28px;
+        letter-spacing: -0.02em;
+        font-weight: 800;
+        margin: 0 0 6px;
+      }
+      .lead {
+        font-size: 18px;
+      }
+      .mut {
+        color: var(--mut);
+      }
+      .rings {
+        position: relative;
+        height: 70px;
+        width: 130px;
+        margin: 20px 0 10px;
+      }
+      .rings i {
+        position: absolute;
+        top: 0;
+        width: 80px;
+        height: 60px;
+        border-radius: 40px;
+        border: 8px solid var(--a);
+      }
+      .rings i + i {
+        left: 50px;
+        top: 10px;
+        border-color: var(--b);
+        mix-blend-mode: screen;
+      }
+      .q {
+        border: 0;
+        padding: 0;
+        margin: 34px 0 0;
+        min-width: 0;
+      }
+      legend {
+        padding: 0;
+        font-size: 19px;
+        font-weight: 600;
+        line-height: 1.35;
+        margin-bottom: 4px;
+      }
+      .hint {
+        margin: 0 0 12px;
+        font-size: 14px;
+        color: var(--mut);
+      }
+      .quote {
+        margin: 0 0 14px;
+        padding: 12px 16px;
+        border-left: 3px solid var(--b);
+        background: var(--card);
+        border-radius: 0 10px 10px 0;
+        font-style: italic;
+      }
+      .opts {
+        display: grid;
+        gap: 8px;
+      }
+      .o {
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+        padding: 12px 14px;
+        border: 1.5px solid var(--line);
+        border-radius: 12px;
+        background: var(--card);
+        cursor: pointer;
+        transition:
+          border-color 0.15s,
+          background 0.15s;
+      }
+      .o input {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+      }
+      .o span::before {
+        content: "";
+        float: left;
+        width: 20px;
+        height: 20px;
+        margin: 1px 12px 0 0;
+        border: 2px solid var(--mut);
+        border-radius: 6px;
+        transition: 0.15s;
+      }
+      .r span::before {
+        border-radius: 50%;
+      }
+      .o:has(input:checked) {
+        border-color: var(--a);
+        background: color-mix(in srgb, var(--a) 12%, var(--card));
+      }
+      .o:has(input:checked) span::before {
+        border-color: var(--a);
+        background: var(--a);
+        box-shadow: inset 0 0 0 4px var(--card);
+      }
+      .o:has(input:disabled) {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+      .o:has(input:focus-visible) {
+        outline: 2px solid var(--b);
+        outline-offset: 2px;
+      }
+      textarea,
+      .oth {
+        width: 100%;
+        font: inherit;
+        color: var(--fg);
+        background: var(--card);
+        border: 1.5px solid var(--line);
+        border-radius: 12px;
+        padding: 12px 14px;
+        resize: vertical;
+      }
+      .oth {
+        margin-top: 8px;
+      }
+      textarea:focus,
+      .oth:focus {
+        outline: 2px solid var(--b);
+        outline-offset: 1px;
+      }
+      .err {
+        margin: 8px 0 0;
+        min-height: 1em;
+        font-size: 14px;
+        color: var(--err);
+      }
+      .nav {
+        display: flex;
+        gap: 12px;
+        justify-content: space-between;
+        margin-top: 40px;
+      }
+      .btn {
+        font: 600 16px inherit;
+        font-family: inherit;
+        padding: 14px 26px;
+        border-radius: 12px;
+        border: 0;
+        background: var(--a);
+        color: var(--on);
+        cursor: pointer;
+      }
+      .btn.ghost {
+        background: transparent;
+        color: var(--fg);
+        border: 1.5px solid var(--line);
+      }
+      .btn:focus-visible {
+        outline: 2px solid var(--b);
+        outline-offset: 2px;
+      }
+      .nav .btn:only-child {
+        margin-left: auto;
+      }
+      details {
+        margin-top: 28px;
+        border: 1.5px solid var(--line);
+        border-radius: 12px;
+        padding: 12px 14px;
+        background: var(--card);
+      }
+      pre {
+        max-width: 100%;
+        overflow-x: auto;
+        font-size: 12px;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          animation: none !important;
+          transition: none !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <svg width="0" height="0" style="position: absolute" aria-hidden="true">
+      <symbol id="g" viewBox="0 0 32 32">
+        <path
+          d="M25 7.5A12 12 0 1 0 25 24.5"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="3.4"
+          stroke-linecap="round"
+        />
+        <rect
+          x="11"
+          y="11"
+          width="11"
+          height="10"
+          rx="5"
+          transform="rotate(-38 16 16)"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.6"
+        />
+      </symbol>
+    </svg>
+    <header>
+      <b class="logo"><svg class="logo-mark" aria-hidden="true"><use href="#g"></use></svg>Linkaro</b
+      ><span id="pt"></span>
+    </header>
+    <div class="bar"><i id="pb"></i></div>
+    <main id="app"></main>
+    <script>
+      // Renseigner ici l'URL de réception (Google Apps Script, Formspree, API Nexa...) quand le formulaire est hébergé hors claude.ai.
+      const ENDPOINT = "https://formsubmit.co/ajax/darilvia64@gmail.com";
+      const M = "multi",
+        U = "single",
+        T = "text";
+      const q = (id, t, type, opts, x) =>
+        Object.assign({ id, t, type, opts: opts || [] }, x);
+      const yes = (a) =>
+        [
+          "Oui, sans problème",
+          "Oui, mais uniquement avec mon approbation avant chaque accord",
+          "Oui, pour certaines collaborations seulement",
+        ].includes(a["8.2"]);
+      const S = [
+        {
+          t: "Votre activité",
+          q: [
+            q(
+              "1.1",
+              "Sur quelles plateformes publiez-vous principalement ?",
+              M,
+              ["TikTok", "Facebook", "YouTube", "Instagram", "Snapchat", "X"],
+              { other: 1 },
+            ),
+            q("1.3", "Comment décririez-vous votre activité aujourd'hui ?", U, [
+              "C'est surtout un loisir",
+              "Je crée sérieusement mais ce n'est pas encore une activité professionnelle",
+              "C'est une activité qui me rapporte déjà de l'argent",
+              "C'est mon activité professionnelle principale",
+              "Je suis en train de passer progressivement à une activité professionnelle",
+            ]),
+            q(
+              "1.4",
+              "Aujourd'hui, vos revenus liés à la création de contenu viennent principalement de :",
+              M,
+              [
+                "Collaborations avec des marques",
+                "Publicité / revenus des plateformes",
+                "Vente de produits ou services",
+                "Affiliation / commissions",
+                "Événements / apparitions",
+                "Dons / soutien de la communauté",
+                "!Je ne gagne pas encore d'argent avec mon contenu",
+              ],
+              { other: 1 },
+            ),
+          ],
+        },
+        {
+          t: "Vos collaborations avec les marques",
+          q: [
+            q(
+              "2.1",
+              "Avez-vous déjà travaillé avec une marque, une entreprise ou un commerce dans le cadre de votre activité de créateur ?",
+              U,
+              ["Oui", "Non"],
+            ),
+            q(
+              "2.2",
+              "Comment ces collaborations sont-elles généralement arrivées ?",
+              M,
+              [
+                "La marque m'a directement contacté",
+                "J'ai contacté la marque",
+                "Une connaissance m'a mis en relation",
+                "Une agence / intermédiaire m'a proposé la collaboration",
+                "Via une plateforme spécialisée",
+                "Via les réseaux sociaux",
+              ],
+              { other: 1, show: (a) => a["2.1"] == "Oui" },
+            ),
+            q(
+              "2.3",
+              "Parmi ces étapes, lesquelles vous posent le plus de difficultés ?",
+              M,
+              [
+                "Trouver des marques intéressées par mon profil",
+                "Savoir qui contacter",
+                "Présenter mon profil et mes statistiques",
+                "Savoir combien demander",
+                "Négocier le prix",
+                "Comprendre ce que la marque attend réellement",
+                "Définir ce que comprend ma prestation",
+                "Organiser le travail avec la marque",
+                "Respecter les délais et suivre la collaboration",
+                "Gérer les paiements",
+                "Faire le suivi après la publication",
+              ],
+              { other: 1, max: 3, show: (a) => a["2.1"] == "Oui" },
+            ),
+            q(
+              "2.4",
+              "Aujourd'hui, comment gérez-vous vos collaborations ?",
+              U,
+              [
+                "Principalement dans WhatsApp",
+                "Messenger",
+                "Telegram",
+                "E-mail",
+                "Messages privés des réseaux sociaux",
+                "Notes / bloc-notes",
+                "Excel / Google Sheets",
+                "Plusieurs outils différents selon les situations",
+                "Je n'ai pas vraiment de méthode particulière",
+              ],
+              { other: 1, show: (a) => a["2.1"] == "Oui" },
+            ),
+            q(
+              "2.5",
+              "Qu'est-ce qui vous empêche principalement d'obtenir une collaboration avec une marque ?",
+              U,
+              [
+                "Je ne sais pas quelles marques contacter",
+                "Je ne sais pas comment les approcher",
+                "Je ne sais pas combien demander",
+                "Je ne sais pas comment présenter mon profil",
+                "Je manque de visibilité auprès des marques",
+                "Je n'ai pas encore suffisamment développé mon audience",
+                "Je ne sais pas réellement comment fonctionne une collaboration avec une marque",
+              ],
+              { other: 1, show: (a) => a["2.1"] == "Non" },
+            ),
+          ],
+        },
+        {
+          t: "Le problème le plus important",
+          q: [
+            q(
+              "3.1",
+              "Imaginez que vous recevez demain une proposition intéressante d'une marque. Qu'est-ce qui pourrait vous faire hésiter ou vous mettre en difficulté ?",
+              M,
+              [
+                "Je ne sais pas si le prix proposé est correct",
+                "Je ne sais pas quoi répondre à la marque",
+                "Je ne sais pas exactement ce que je dois accepter ou refuser",
+                "Je ne comprends pas bien les conditions proposées",
+                "Je ne sais pas comment négocier",
+                "Je crains d'accepter trop de travail pour le prix proposé",
+                "Je ne sais pas comment organiser la collaboration",
+                "J'ai peur de ne pas être payé correctement ou à temps",
+                "!Je ne rencontre pas vraiment ce problème",
+              ],
+              { other: 1, max: 3 },
+            ),
+            q(
+              "3.2",
+              "Quelle tâche vous prend actuellement le plus de temps en dehors de la création de contenu ?",
+              U,
+              [
+                "Chercher des opportunités",
+                "Contacter les marques",
+                "Répondre aux messages",
+                "Négocier",
+                "Préparer des propositions / devis",
+                "Organiser les collaborations",
+                "Faire le suivi des paiements",
+                "Analyser mes statistiques",
+                "Préparer des documents",
+                "Aucune en particulier",
+              ],
+              { other: 1 },
+            ),
+            q(
+              "3.3",
+              "Selon vous, quel est aujourd'hui le principal problème d'un créateur qui souhaite vivre de son activité ?",
+              T,
+            ),
+          ],
+        },
+        {
+          t: "Comment Linkaro devrait vous accompagner ?",
+          intro:
+            "Nous avons identifié plusieurs pistes. Dites-nous lesquelles correspondent réellement à vos besoins.",
+          q: [
+            q(
+              "4.1",
+              "Parmi les possibilités suivantes, lesquelles vous seraient les plus utiles ?",
+              M,
+              [
+                "Créer automatiquement mon profil professionnel à partir de mes réseaux sociaux et de mes statistiques",
+                "Créer automatiquement un Media Kit que je peux envoyer à une marque",
+                "M'aider à trouver des marques susceptibles d'être intéressées par mon profil",
+                "Me conseiller sur mes tarifs selon la prestation demandée",
+                "M'aider à négocier une proposition reçue d'une marque",
+                "Centraliser mes collaborations dans un seul endroit",
+                "M'aider à préparer des propositions commerciales et autres documents",
+                "Analyser mes collaborations et mes résultats pour mieux comprendre ce qui fonctionne",
+              ],
+              { other: 1, max: 4 },
+            ),
+            q(
+              "4.2",
+              "Parmi ces fonctionnalités, laquelle serait pour vous la plus importante ?",
+              U,
+              [
+                "Trouver des marques",
+                "Mieux vendre mon profil",
+                "Savoir combien facturer",
+                "Mieux négocier",
+                "Gérer mes collaborations",
+                "Gagner du temps dans les tâches administratives",
+                "Comprendre mes performances",
+              ],
+              { other: 1 },
+            ),
+          ],
+        },
+        {
+          t: "Les échanges avec les marques",
+          q: [
+            q(
+              "5.1",
+              "Aujourd'hui, les échanges avec une marque se passent principalement où ?",
+              U,
+              [
+                "WhatsApp",
+                "Messenger",
+                "Telegram",
+                "Instagram",
+                "E-mail",
+                "Plusieurs canaux selon la marque",
+              ],
+              { other: 1 },
+            ),
+            q(
+              "5.2",
+              "Quelle expérience vous semblerait la plus pratique ?",
+              U,
+              [
+                "Tout centraliser dans Linkaro : messages, informations de la collaboration et suivi au même endroit.",
+                "Continuer à utiliser WhatsApp / Messenger / Telegram, mais pouvoir demander de l'aide à Linkaro pendant les échanges.",
+                "Pouvoir transférer une conversation à Linkaro afin qu'il m'aide à comprendre la proposition et préparer ma réponse.",
+                "Pouvoir choisir selon la situation.",
+                "Je préfère garder les échanges totalement séparés de Linkaro.",
+              ],
+            ),
+            q(
+              "5.3",
+              "Imaginez qu'une marque vous envoie ce message. Que souhaiteriez-vous que Linkaro puisse faire ?",
+              M,
+              [
+                "Analyser le message et m'expliquer ce que la marque demande",
+                "Me proposer une réponse",
+                "Me conseiller un tarif",
+                "Préparer une proposition commerciale complète",
+                "!Tout cela",
+                "!Je préfère rédiger moi-même ma réponse",
+              ],
+              {
+                quote:
+                  "Bonjour, nous aimerions travailler avec vous pour promouvoir notre nouveau produit. Pouvez-vous nous envoyer vos tarifs ?",
+              },
+            ),
+          ],
+        },
+        {
+          t: "Documents et aide à la gestion",
+          q: [
+            q(
+              "6.1",
+              "Quels documents aimeriez-vous pouvoir préparer plus facilement ?",
+              M,
+              [
+                "Media Kit",
+                "Proposition commerciale",
+                "Devis / offre de prestation",
+                "Contrat",
+                "Brief de collaboration",
+                "Plan de contenu",
+                "Proposition de stratégie de communication",
+                "Rapport de collaboration / résultats",
+                "Facture / justificatif de paiement",
+              ],
+              { other: 1 },
+            ),
+            q("6.2", "Quel niveau d'aide préférez-vous ?", U, [
+              "Linkaro prépare le document et je le modifie",
+              "Linkaro me propose une première version que je valide",
+              "Je veux surtout des modèles prêts à personnaliser",
+              "Je préfère tout rédiger moi-même",
+            ]),
+          ],
+        },
+        {
+          t: "Les opportunités",
+          q: [
+            q(
+              "7.1",
+              "Comment aimeriez-vous découvrir de nouvelles opportunités ?",
+              U,
+              [
+                "Voir une liste de marques susceptibles de travailler avec moi",
+                "Recevoir des opportunités correspondant à mon profil",
+                "Recevoir uniquement les opportunités très pertinentes",
+                "Pouvoir rechercher moi-même les marques",
+                "Les deux : recommandations + recherche libre",
+                "Je préfère que les marques viennent directement vers moi",
+              ],
+            ),
+            q(
+              "7.2",
+              "Qu'est-ce qui rendrait une opportunité intéressante pour vous ?",
+              M,
+              [
+                "Le budget",
+                "La compatibilité avec mon contenu",
+                "La compatibilité avec mon audience",
+                "La réputation de la marque",
+                "La durée de la collaboration",
+                "La possibilité de travailler sur le long terme",
+                "La liberté créative",
+                "La localisation de la marque",
+                "Le potentiel de visibilité",
+              ],
+              { other: 1, max: 4 },
+            ),
+          ],
+        },
+        {
+          t: "Jusqu'où Linkaro devrait aller ?",
+          intro: "Cette partie est importante pour comprendre votre vision.",
+          q: [
+            q(
+              "8.1",
+              "Parmi ces descriptions, laquelle correspond le mieux à ce que vous aimeriez que Linkaro devienne ?",
+              U,
+              [
+                "Un outil : je gère moi-même mon activité, Linkaro m'aide.",
+                "Un assistant : Linkaro m'aide à prendre les bonnes décisions et à gagner du temps.",
+                "Une plateforme d'opportunités : Linkaro m'aide à trouver des marques et des collaborations.",
+                "Un intermédiaire : Linkaro facilite les échanges et les collaborations entre marques et créateurs.",
+                "Un représentant : Linkaro peut négocier certaines collaborations pour moi.",
+                "Une combinaison de plusieurs de ces rôles.",
+              ],
+            ),
+            q(
+              "8.2",
+              "Seriez-vous à l'aise avec l'idée que Linkaro puisse un jour négocier directement avec une marque en votre nom ?",
+              U,
+              [
+                "Oui, sans problème",
+                "Oui, mais uniquement avec mon approbation avant chaque accord",
+                "Oui, pour certaines collaborations seulement",
+                "Non, je préfère toujours négocier moi-même",
+                "Je ne sais pas encore",
+              ],
+            ),
+            q(
+              "8.3",
+              "Dans quelles situations pourriez-vous accepter que Linkaro vous représente ?",
+              M,
+              [
+                "Pour trouver des marques",
+                "Pour négocier les tarifs",
+                "Pour négocier les conditions",
+                "Pour gérer la collaboration",
+                "Pour gérer plusieurs marques en même temps",
+                "Pour des collaborations importantes uniquement",
+              ],
+              { other: 1, show: yes },
+            ),
+          ],
+        },
+        {
+          t: "Votre vision de Linkaro",
+          q: [
+            q(
+              "9.1",
+              "Si Linkaro existait déjà aujourd'hui, quelle serait la première chose que vous voudriez lui demander ?",
+              T,
+            ),
+            q(
+              "9.2",
+              "Quel problème Linkaro devrait absolument résoudre pour que vous vous disiez : « Cet outil m'est vraiment utile » ?",
+              T,
+            ),
+            q(
+              "9.3",
+              "Qu'est-ce qui pourrait vous faire abandonner rapidement Linkaro ?",
+              T,
+            ),
+            q(
+              "9.4",
+              "Y a-t-il une fonctionnalité ou une idée que vous aimeriez voir dans Linkaro et que nous n'avons pas évoquée ?",
+              T,
+            ),
+          ],
+        },
+      ];
+      const Q = {};
+      S.forEach((s) => s.q.forEach((x) => (Q[x.id] = x)));
+      const $ = (s) => document.querySelector(s),
+        app = $("#app"),
+        N = S.length;
+      const esc = (s) =>
+        String(s).replace(
+          /[&<>"]/g,
+          (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c],
+        );
+      const ld = (k, d) => {
+        try {
+          const v = localStorage.getItem("lk_" + k);
+          return v ? JSON.parse(v) : d;
+        } catch (e) {
+          return d;
+        }
+      };
+      let A = ld("a", {}),
+        step = Math.min(ld("s", -1), N - 1);
+      const sv = () => {
+        try {
+          localStorage.setItem("lk_a", JSON.stringify(A));
+          localStorage.setItem("lk_s", JSON.stringify(step));
+        } catch (e) {}
+      };
+      const box = (id) => document.querySelector(`.q[data-id="${id}"]`);
+
+      function qHTML(x) {
+        const hint =
+          x.type == T
+            ? "Réponse libre, facultative"
+            : x.type == U
+              ? "Une seule réponse"
+              : x.max
+                ? `Jusqu'à ${x.max} réponses`
+                : "Plusieurs réponses possibles";
+        const kind = x.type == U ? "radio" : "checkbox",
+          cls = x.type == U ? "o r" : "o";
+        let b = "";
+        if (x.type == T)
+          b = `<textarea rows="4" maxlength="800" placeholder="Votre réponse">${esc(A[x.id] || "")}</textarea>`;
+        else {
+          const opts = x.opts
+            .map((o) => {
+              const ex = o[0] == "!",
+                l = ex ? o.slice(1) : o;
+              return `<label class="${cls}"><input type="${kind}" name="n${x.id}" value="${esc(l)}" data-ex="${ex ? 1 : 0}"><span>${esc(l)}</span></label>`;
+            })
+            .join("");
+          const oth = x.other
+            ? `<label class="${cls}"><input type="${kind}" name="n${x.id}" value="Autre" data-ex="0"><span>Autre</span></label><input class="oth" type="text" maxlength="150" placeholder="Précisez" value="${esc(A[x.id + "_autre"] || "")}" hidden>`
+            : "";
+          b = `<div class="opts">${opts}${oth}</div>`;
+        }
+        return `<fieldset class="q" data-id="${x.id}"><legend>${esc(x.t)}</legend><p class="hint">${hint}</p>${x.quote ? `<blockquote class="quote">${esc(x.quote)}</blockquote>` : ""}${b}<p class="err" aria-live="polite"></p></fieldset>`;
+      }
+      function refresh(id) {
+        const x = Q[id],
+          bx = box(id);
+        if (!bx || x.type == T) return;
+        const v = [].concat(A[id] || []);
+        bx.querySelectorAll("input[type=radio],input[type=checkbox]").forEach(
+          (i) => {
+            i.checked = v.includes(i.value);
+            i.disabled = !!x.max && !i.checked && v.length >= x.max;
+          },
+        );
+        const o = bx.querySelector(".oth");
+        if (o) o.hidden = !v.includes("Autre");
+      }
+      function vis() {
+        S[step].q.forEach((x) => {
+          const b = box(x.id);
+          if (b) b.hidden = !!(x.show && !x.show(A));
+        });
+      }
+      function head() {
+        $("#pt").textContent =
+          step >= 0 && step < N
+            ? `Section ${step + 1} sur ${N}`
+            : step >= N
+              ? "Terminé"
+              : "";
+        $("#pb").style.width =
+          (step < 0 ? 0 : (Math.min(step + 1, N) / N) * 100) + "%";
+      }
+      function render() {
+        app.classList.remove("in");
+        void app.offsetWidth;
+        app.classList.add("in");
+        head();
+        window.scrollTo(0, 0);
+        if (step < 0) {
+          app.innerHTML = `<div class="rings"><i></i><i></i></div><h1>Comprendre les besoins des créateurs et construire Linkaro avec eux</h1><p class="lead">Linkaro aide les créateurs de contenu à mieux développer et gérer leurs collaborations avec les marques et entreprises.</p><p class="mut">Avant de définir le produit, nous voulons comprendre votre activité, les difficultés que vous rencontrez réellement et la manière dont vous aimeriez être accompagné. Il n'y a pas de bonne ou de mauvaise réponse. Comptez 8 à 10 minutes.</p><div class="nav"><button class="btn" id="go">${Object.keys(A).length ? "Reprendre" : "Commencer"}</button></div>`;
+          $("#go").onclick = () => {
+            step = 0;
+            sv();
+            render();
+          };
+          return;
+        }
+        const s = S[step];
+        app.innerHTML = `<h2>${s.t}</h2>${s.intro ? `<p class="mut">${s.intro}</p>` : ""}${s.q.map(qHTML).join("")}<div class="nav"><button class="btn ghost" id="bk">Retour</button><button class="btn" id="nx">${step == N - 1 ? "Envoyer mes réponses" : "Continuer"}</button></div>`;
+        s.q.forEach((x) => refresh(x.id));
+        vis();
+        $("#bk").onclick = () => {
+          step--;
+          sv();
+          render();
+        };
+        $("#nx").onclick = () => {
+          if (!check()) return;
+          if (step == N - 1) submit();
+          else {
+            step++;
+            sv();
+            render();
+          }
+        };
+      }
+      app.addEventListener("input", (e) => {
+        const t = e.target,
+          bx = t.closest(".q");
+        if (!bx) return;
+        const id = bx.dataset.id;
+        if (t.tagName == "TEXTAREA") A[id] = t.value;
+        else if (t.classList.contains("oth")) A[id + "_autre"] = t.value;
+        sv();
+      });
+      app.addEventListener("change", (e) => {
+        const t = e.target,
+          bx = t.closest(".q");
+        if (!bx || t.type == "text") return;
+        const id = bx.dataset.id,
+          x = Q[id];
+        if (x.type == U) A[id] = t.value;
+        else {
+          let v = [...bx.querySelectorAll("input[type=checkbox]:checked")].map(
+            (i) => i.value,
+          );
+          if (t.checked && t.dataset.ex == "1") v = [t.value];
+          else if (t.checked) {
+            const ex = x.opts.filter((o) => o[0] == "!").map((o) => o.slice(1));
+            v = v.filter((i) => !ex.includes(i));
+          }
+          A[id] = v;
+        }
+        bx.querySelector(".err").textContent = "";
+        refresh(id);
+        vis();
+        sv();
+        const o = bx.querySelector(".oth");
+        if (o && !o.hidden && t.value == "Autre") o.focus();
+      });
+      function check() {
+        let bad = null;
+        S[step].q.forEach((x) => {
+          const b = box(x.id);
+          if (b.hidden || x.type == T) return;
+          const v = [].concat(A[x.id] || []);
+          let m = "";
+          if (!v.length) m = "Choisissez une réponse pour continuer.";
+          else if (v.includes("Autre") && !(A[x.id + "_autre"] || "").trim())
+            m = "Précisez votre réponse « Autre ».";
+          b.querySelector(".err").textContent = m;
+          if (m && !bad) bad = b;
+        });
+        if (bad) bad.scrollIntoView({ behavior: "smooth", block: "center" });
+        return !bad;
+      }
+      async function submit() {
+        const out = { envoye_le: new Date().toISOString(), reponses: {} };
+        S.forEach((s) =>
+          s.q.forEach((x) => {
+            if (x.show && !x.show(A)) return;
+            const v = A[x.id];
+            if (v == null || !v.length) return;
+            const r = { question: x.t, reponse: v };
+            if ([].concat(v).includes("Autre") && A[x.id + "_autre"])
+              r.autre = A[x.id + "_autre"].trim();
+            out.reponses[x.id] = r;
+          }),
+        );
+        if (ENDPOINT) {
+          try {
+            await fetch(ENDPOINT, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(out),
+            });
+          } catch (e) {}
+        }
+        try {
+          const all = JSON.parse(localStorage.getItem("lk_all") || "[]");
+          all.push(out);
+          localStorage.setItem("lk_all", JSON.stringify(all));
+          localStorage.removeItem("lk_a");
+          localStorage.removeItem("lk_s");
+        } catch (e) {}
+        A = {};
+        step = N;
+        head();
+        window.scrollTo(0, 0);
+        const json = JSON.stringify(out, null, 2);
+        app.innerHTML = `<div class="rings"><i></i><i></i></div><h1>Merci pour vos réponses</h1><p class="lead">Ce questionnaire sert à construire Linkaro à partir de la réalité des créateurs, et non uniquement d'hypothèses.</p><p class="mut">Vos réponses nous aideront à définir les fonctionnalités prioritaires, la manière dont Linkaro doit vous accompagner et jusqu'où la plateforme doit aller.</p><details><summary>Données de cette réponse (équipe Linkaro)</summary><pre id="js">${esc(json)}</pre><button class="btn ghost" id="cp">Copier le JSON</button></details><div class="nav"><button class="btn ghost" id="nw">Nouvelle réponse</button></div>`;
+        $("#cp").onclick = async () => {
+          try {
+            await navigator.clipboard.writeText(json);
+            $("#cp").textContent = "JSON copié";
+          } catch (e) {
+            const r = document.createRange();
+            r.selectNodeContents($("#js"));
+            getSelection().removeAllRanges();
+            getSelection().addRange(r);
+            $("#cp").textContent = "Sélectionné, copiez à la main";
+          }
+        };
+        $("#nw").onclick = () => {
+          step = -1;
+          render();
+        };
+      }
+      render();
+    </script>
+  </body>
+</html>
