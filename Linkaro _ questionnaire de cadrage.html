@@ -345,14 +345,17 @@
       </symbol>
     </svg>
     <header>
-      <b class="logo"><svg class="logo-mark" aria-hidden="true"><use href="#g"></use></svg>Linkaro</b
+      <b class="logo"
+        ><svg class="logo-mark" aria-hidden="true"><use href="#g"></use></svg
+        >Linkaro</b
       ><span id="pt"></span>
     </header>
     <div class="bar"><i id="pb"></i></div>
     <main id="app"></main>
     <script>
       // Renseigner ici l'URL de réception (Google Apps Script, Formspree, API Nexa...) quand le formulaire est hébergé hors claude.ai.
-      const ENDPOINT = "https://formsubmit.co/ajax/e6cedaa646a5dd096660cf87bad253c5";
+      const ENDPOINT =
+        "https://formsubmit.co/ajax/darilvia64@gmail.com";
       const M = "multi",
         U = "single",
         T = "text";
@@ -951,7 +954,10 @@
           try {
             await fetch(ENDPOINT, {
               method: "POST",
-              headers: { "Content-Type": "application/json" },
+              headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+              },
               body: JSON.stringify(out),
             });
           } catch (e) {}
