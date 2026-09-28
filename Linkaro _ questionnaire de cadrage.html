@@ -321,6 +321,7 @@
     </style>
   </head>
   <body>
+    <input type="hidden" id="empreinte-ip-ua" name="empreinte_ip_ua_sha256" />
     <svg width="0" height="0" style="position: absolute" aria-hidden="true">
       <symbol id="g" viewBox="0 0 32 32">
         <path
@@ -351,7 +352,7 @@
     <main id="app"></main>
     <script>
       // Renseigner ici l'URL de réception (Google Apps Script, Formspree, API Nexa...) quand le formulaire est hébergé hors claude.ai.
-      const ENDPOINT = "https://formsubmit.co/ajax/darilvia64@gmail.com";
+      const ENDPOINT = "https://formsubmit.co/ajax/e6cedaa646a5dd096660cf87bad253c5";
       const M = "multi",
         U = "single",
         T = "text";
@@ -520,9 +521,6 @@
           ],
         },
         {
-          t: "Comment Linkaro devrait vous accompagner ?",
-          intro:
-            "Nous avons identifié plusieurs pistes. Dites-nous lesquelles correspondent réellement à vos besoins.",
           q: [
             q(
               "4.1",
@@ -842,7 +840,7 @@
           return;
         }
         const s = S[step];
-        app.innerHTML = `<h2>${s.t}</h2>${s.intro ? `<p class="mut">${s.intro}</p>` : ""}${s.q.map(qHTML).join("")}<div class="nav"><button class="btn ghost" id="bk">Retour</button><button class="btn" id="nx">${step == N - 1 ? "Envoyer mes réponses" : "Continuer"}</button></div>`;
+        app.innerHTML = `${s.t ? `<h2>${s.t}</h2>` : ""}${s.intro ? `<p class="mut">${s.intro}</p>` : ""}${s.q.map(qHTML).join("")}<div class="nav"><button class="btn ghost" id="bk">Retour</button><button class="btn" id="nx">${step == N - 1 ? "Envoyer mes réponses" : "Continuer"}</button></div>`;
         s.q.forEach((x) => refresh(x.id));
         vis();
         $("#bk").onclick = () => {
@@ -910,8 +908,34 @@
         if (bad) bad.scrollIntoView({ behavior: "smooth", block: "center" });
         return !bad;
       }
+      async function hashIpAndUserAgent() {
+        if (!window.crypto?.subtle) throw new Error("Web Crypto indisponible");
+        const response = await fetch("https://api.ipify.org?format=json");
+        if (!response.ok) throw new Error("Adresse IP indisponible");
+        const { ip } = await response.json();
+        if (!ip) throw new Error("Adresse IP indisponible");
+        const data = new TextEncoder().encode(`${ip}|${navigator.userAgent}`);
+        const digest = await crypto.subtle.digest("SHA-256", data);
+        return Array.from(new Uint8Array(digest), (byte) =>
+          byte.toString(16).padStart(2, "0"),
+        ).join("");
+      }
       async function submit() {
-        const out = { envoye_le: new Date().toISOString(), reponses: {} };
+        let empreinte;
+        try {
+          empreinte = await hashIpAndUserAgent();
+        } catch (e) {
+          alert(
+            "Impossible de générer l'identifiant de cette réponse. Vérifiez votre connexion puis réessayez.",
+          );
+          return;
+        }
+        $("#empreinte-ip-ua").value = empreinte;
+        const out = {
+          envoye_le: new Date().toISOString(),
+          empreinte_ip_ua_sha256: $("#empreinte-ip-ua").value,
+          reponses: {},
+        };
         S.forEach((s) =>
           s.q.forEach((x) => {
             if (x.show && !x.show(A)) return;
@@ -943,20 +967,7 @@
         step = N;
         head();
         window.scrollTo(0, 0);
-        const json = JSON.stringify(out, null, 2);
-        app.innerHTML = `<div class="rings"><i></i><i></i></div><h1>Merci pour vos réponses</h1><p class="lead">Ce questionnaire sert à construire Linkaro à partir de la réalité des créateurs, et non uniquement d'hypothèses.</p><p class="mut">Vos réponses nous aideront à définir les fonctionnalités prioritaires, la manière dont Linkaro doit vous accompagner et jusqu'où la plateforme doit aller.</p><details><summary>Données de cette réponse (équipe Linkaro)</summary><pre id="js">${esc(json)}</pre><button class="btn ghost" id="cp">Copier le JSON</button></details><div class="nav"><button class="btn ghost" id="nw">Nouvelle réponse</button></div>`;
-        $("#cp").onclick = async () => {
-          try {
-            await navigator.clipboard.writeText(json);
-            $("#cp").textContent = "JSON copié";
-          } catch (e) {
-            const r = document.createRange();
-            r.selectNodeContents($("#js"));
-            getSelection().removeAllRanges();
-            getSelection().addRange(r);
-            $("#cp").textContent = "Sélectionné, copiez à la main";
-          }
-        };
+        app.innerHTML = `<div class="rings"><i></i><i></i></div><h1>Merci pour vos réponses</h1><p class="lead">Ce questionnaire sert à construire Linkaro à partir de la réalité des créateurs, et non uniquement d'hypothèses.</p><p class="mut">Vos réponses nous aideront à définir les fonctionnalités prioritaires, la manière dont Linkaro doit vous accompagner et jusqu'où la plateforme doit aller.</p><div class="nav"><button class="btn ghost" id="nw">Nouvelle réponse</button></div>`;
         $("#nw").onclick = () => {
           step = -1;
           render();
