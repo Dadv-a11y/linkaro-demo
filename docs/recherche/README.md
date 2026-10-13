@@ -7,6 +7,9 @@ Recherche menée avant le développement, pour comprendre comment fonctionne le 
 | [01-marche-sponsoring-afrique.md](01-marche-sponsoring-afrique.md) | Modèles de rémunération, acteurs (agences, managers, plateformes), tarifs observés en FCFA, déroulement d'une collaboration, douleurs documentées, cadre fiscal et réglementaire, **proposition de système pour Linkaro** |
 | [02-integrations-reseaux-sociaux.md](02-integrations-reseaux-sociaux.md) | Ce que TikTok, Instagram, YouTube et Facebook permettent réellement via leurs API, ce qui est possible avec les messageries, **parcours d'inscription proposé**, modèle de données, ordre de développement, prérequis administratifs |
 | [03-sources-videos.md](03-sources-videos.md) | Synthèse des 7 vidéos fournies par le client |
+| [04-score-engagement.md](04-score-engagement.md) | Évaluer un créateur au-delà des abonnés : formules d'engagement, références par réseau et palier, **« Indice Linkaro »**, détection d'anomalies, exemples chiffrés, lien avec le tarif |
+
+Voir aussi : [../questionnaire-branches.md](../questionnaire-branches.md), la carte des branchements du questionnaire de cadrage v2.
 
 ## Les 6 conclusions à retenir
 

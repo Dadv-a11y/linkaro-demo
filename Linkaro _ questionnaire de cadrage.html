@@ -312,6 +312,29 @@
         white-space: pre-wrap;
         word-break: break-word;
       }
+      .hr {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .lang {
+        font: 600 13px inherit;
+        font-family: inherit;
+        color: var(--fg);
+        background: transparent;
+        border: 1.5px solid var(--line);
+        border-radius: 999px;
+        padding: 6px 12px;
+        cursor: pointer;
+      }
+      .lang:focus-visible {
+        outline: 2px solid var(--b);
+        outline-offset: 2px;
+      }
+      .btn:disabled {
+        opacity: 0.6;
+        cursor: wait;
+      }
       @media (prefers-reduced-motion: reduce) {
         * {
           animation: none !important;
@@ -348,7 +371,10 @@
       <b class="logo"
         ><svg class="logo-mark" aria-hidden="true"><use href="#g"></use></svg
         >Linkaro</b
-      ><span id="pt"></span>
+      ><span class="hr"
+        ><span id="pt"></span
+        ><button class="lang" id="lang" type="button">EN</button></span
+      >
     </header>
     <div class="bar"><i id="pb"></i></div>
     <main id="app"></main>
@@ -356,395 +382,561 @@
       // Renseigner ici l'URL de réception (Google Apps Script, Formspree, API Nexa...) quand le formulaire est hébergé hors claude.ai.
       const ENDPOINT =
         "https://formsubmit.co/ajax/e6cedaa646a5dd096660cf87bad253c";
+      const VERSION = 2;
       const M = "multi",
         U = "single",
         T = "text";
-      const q = (id, t, type, opts, x) =>
-        Object.assign({ id, t, type, opts: opts || [] }, x);
-      const yes = (a) =>
-        [
-          "Oui, sans problème",
-          "Oui, mais uniquement avec mon approbation avant chaque accord",
-          "Oui, pour certaines collaborations seulement",
-        ].includes(a["8.2"]);
+      // o(code, libellé FR, libellé EN, exclusif?) — le code est stable quelle que soit la langue.
+      const o = (v, fr, en, ex) => ({ v, fr, en: en || fr, ex: !!ex });
+      const q = (id, fr, en, type, opts, x) =>
+        Object.assign({ id, fr, en, type, opts: opts || [] }, x);
+      const has = (E, id, ...v) => [].concat(E[id] || []).some((x) => v.includes(x));
+      const collab = (E) => has(E, "c1", "plusieurs", "peu");
+      const paid = (E) => collab(E) && has(E, "c4", "argent");
+      const nsp = o("nsp", "Je ne sais pas", "I don't know");
+
       const S = [
         {
-          t: "Votre activité",
+          fr: "Vous et votre activité",
+          en: "You and your content",
           q: [
-            q(
-              "1.1",
-              "Sur quelles plateformes publiez-vous principalement ?",
-              M,
-              ["TikTok", "Facebook", "YouTube", "Instagram", "Snapchat", "X"],
-              { other: 1 },
-            ),
-            q("1.3", "Comment décririez-vous votre activité aujourd'hui ?", U, [
-              "C'est surtout un loisir",
-              "Je crée sérieusement mais ce n'est pas encore une activité professionnelle",
-              "C'est une activité qui me rapporte déjà de l'argent",
-              "C'est mon activité professionnelle principale",
-              "Je suis en train de passer progressivement à une activité professionnelle",
+            q("p1", "Quel âge avez-vous ?", "How old are you?", U, [
+              o("m18", "Moins de 18 ans", "Under 18"),
+              o("18_20", "18 – 20 ans", "18 – 20"),
+              o("21_24", "21 – 24 ans", "21 – 24"),
+              o("25_34", "25 – 34 ans", "25 – 34"),
+              o("35p", "35 ans ou plus", "35 or older"),
             ]),
-            q(
-              "1.4",
-              "Aujourd'hui, vos revenus liés à la création de contenu viennent principalement de :",
-              M,
-              [
-                "Collaborations avec des marques",
-                "Publicité / revenus des plateformes",
-                "Vente de produits ou services",
-                "Affiliation / commissions",
-                "Événements / apparitions",
-                "Dons / soutien de la communauté",
-                "!Je ne gagne pas encore d'argent avec mon contenu",
-              ],
-              { other: 1 },
-            ),
+            q("p2", "Dans quel pays vivez-vous ?", "Which country do you live in?", U, [
+              o("cm", "Cameroun", "Cameroon"),
+              o("ci", "Côte d'Ivoire"),
+              o("sn", "Sénégal", "Senegal"),
+              o("ga", "Gabon"),
+              o("ng", "Nigeria"),
+            ], { other: 1 }),
+            q("a1", "Sur quelles plateformes publiez-vous ?", "Which platforms do you post on?", M, [
+              o("tiktok", "TikTok"),
+              o("facebook", "Facebook"),
+              o("instagram", "Instagram"),
+              o("youtube", "YouTube"),
+              o("snapchat", "Snapchat"),
+              o("x", "X (Twitter)"),
+              o("whatsapp", "Statuts / chaîne WhatsApp", "WhatsApp status / channel"),
+            ], { other: 1 }),
+            q("a2", "Laquelle est votre plateforme principale ?", "Which one is your main platform?", U, [], { from: "a1" }),
+            q("a3", "Combien d'abonnés avez-vous sur votre plateforme principale ?", "How many followers do you have on your main platform?", U, [
+              o("lt1k", "Moins de 1 000", "Under 1,000"),
+              o("1_10k", "1 000 – 10 000"),
+              o("10_50k", "10 000 – 50 000"),
+              o("50_250k", "50 000 – 250 000"),
+              o("250k_1m", "250 000 – 1 million"),
+              o("gt1m", "Plus de 1 million", "Over 1 million"),
+              nsp,
+            ]),
+            q("a4", "Comment décririez-vous votre activité aujourd'hui ?", "How would you describe your activity today?", U, [
+              o("loisir", "C'est surtout un loisir", "It's mostly a hobby"),
+              o("serieux", "Je crée sérieusement mais ce n'est pas encore une activité professionnelle", "I create seriously but it's not a business yet"),
+              o("transition", "Je suis en train de passer progressivement à une activité professionnelle", "I'm gradually turning it into a business"),
+              o("revenu", "Cela me rapporte déjà de l'argent", "It already earns me money"),
+              o("principal", "C'est mon activité professionnelle principale", "It's my main job"),
+            ]),
+            q("a5", "Quels sont vos thèmes principaux ?", "What are your main topics?", M, [
+              o("humour", "Humour / sketchs", "Comedy / skits"),
+              o("beaute", "Beauté / mode", "Beauty / fashion"),
+              o("cuisine", "Cuisine", "Food"),
+              o("lifestyle", "Lifestyle / vie quotidienne", "Lifestyle / daily life"),
+              o("musique", "Musique / danse", "Music / dance"),
+              o("tech", "Tech / téléphones", "Tech / phones"),
+              o("sport", "Sport / bien-être", "Sports / wellness"),
+              o("education", "Éducation / conseils", "Education / tips"),
+              o("business", "Business / argent", "Business / money"),
+              o("voyage", "Voyage / tourisme", "Travel / tourism"),
+              o("gaming", "Jeux vidéo", "Gaming"),
+              o("famille", "Famille / parentalité", "Family / parenting"),
+            ], { other: 1, max: 3 }),
+            q("a6", "Vos revenus liés à la création de contenu viennent principalement de :", "Your content-related income mainly comes from:", M, [
+              o("marques", "Collaborations avec des marques", "Brand collaborations"),
+              o("plateformes", "Publicité / revenus des plateformes", "Ads / platform payouts"),
+              o("vente", "Vente de mes propres produits ou services", "Selling my own products or services"),
+              o("affiliation", "Affiliation / commissions", "Affiliate / commissions"),
+              o("evenements", "Événements / apparitions", "Events / appearances"),
+              o("dons", "Dons / soutien de la communauté (cadeaux en live…)", "Donations / community support (live gifts…)"),
+              o("aucun", "Je ne gagne pas encore d'argent avec mon contenu", "I don't earn money from my content yet", 1),
+            ], { other: 1 }),
+            q("a7", "Où se trouve la majorité de votre audience ?", "Where is most of your audience?", U, [
+              o("pays", "Dans mon pays", "In my country"),
+              o("afrique", "Répartie dans plusieurs pays africains", "Spread across several African countries"),
+              o("diaspora", "Surtout à l'étranger / la diaspora", "Mostly abroad / diaspora"),
+              nsp,
+            ]),
           ],
         },
         {
-          t: "Vos collaborations avec les marques",
+          fr: "Vos collaborations avec les marques",
+          en: "Your brand collaborations",
           q: [
-            q(
-              "2.1",
-              "Avez-vous déjà travaillé avec une marque, une entreprise ou un commerce dans le cadre de votre activité de créateur ?",
-              U,
-              ["Oui", "Non"],
-            ),
-            q(
-              "2.2",
-              "Comment ces collaborations sont-elles généralement arrivées ?",
-              M,
-              [
-                "La marque m'a directement contacté",
-                "J'ai contacté la marque",
-                "Une connaissance m'a mis en relation",
-                "Une agence / intermédiaire m'a proposé la collaboration",
-                "Via une plateforme spécialisée",
-                "Via les réseaux sociaux",
-              ],
-              { other: 1, show: (a) => a["2.1"] == "Oui" },
-            ),
-            q(
-              "2.3",
-              "Parmi ces étapes, lesquelles vous posent le plus de difficultés ?",
-              M,
-              [
-                "Trouver des marques intéressées par mon profil",
-                "Savoir qui contacter",
-                "Présenter mon profil et mes statistiques",
-                "Savoir combien demander",
-                "Négocier le prix",
-                "Comprendre ce que la marque attend réellement",
-                "Définir ce que comprend ma prestation",
-                "Organiser le travail avec la marque",
-                "Respecter les délais et suivre la collaboration",
-                "Gérer les paiements",
-                "Faire le suivi après la publication",
-              ],
-              { other: 1, max: 3, show: (a) => a["2.1"] == "Oui" },
-            ),
-            q(
-              "2.4",
-              "Aujourd'hui, comment gérez-vous vos collaborations ?",
-              U,
-              [
-                "Principalement dans WhatsApp",
-                "Messenger",
-                "Telegram",
-                "E-mail",
-                "Messages privés des réseaux sociaux",
-                "Notes / bloc-notes",
-                "Excel / Google Sheets",
-                "Plusieurs outils différents selon les situations",
-                "Je n'ai pas vraiment de méthode particulière",
-              ],
-              { other: 1, show: (a) => a["2.1"] == "Oui" },
-            ),
-            q(
-              "2.5",
-              "Qu'est-ce qui vous empêche principalement d'obtenir une collaboration avec une marque ?",
-              U,
-              [
-                "Je ne sais pas quelles marques contacter",
-                "Je ne sais pas comment les approcher",
-                "Je ne sais pas combien demander",
-                "Je ne sais pas comment présenter mon profil",
-                "Je manque de visibilité auprès des marques",
-                "Je n'ai pas encore suffisamment développé mon audience",
-                "Je ne sais pas réellement comment fonctionne une collaboration avec une marque",
-              ],
-              { other: 1, show: (a) => a["2.1"] == "Non" },
-            ),
+            q("c1", "Avez-vous déjà travaillé avec une marque, une entreprise ou un commerce en tant que créateur ?", "Have you ever worked with a brand, company or business as a creator?", U, [
+              o("plusieurs", "Oui, plusieurs fois", "Yes, several times"),
+              o("peu", "Oui, une ou deux fois", "Yes, once or twice"),
+              o("non", "Non, jamais", "No, never"),
+            ]),
+            q("c2", "Combien de collaborations avez-vous faites ces 12 derniers mois ?", "How many collaborations did you do in the last 12 months?", U, [
+              o("0", "Aucune", "None"),
+              o("1_2", "1 – 2"),
+              o("3_5", "3 – 5"),
+              o("6_10", "6 – 10"),
+              o("10p", "Plus de 10", "More than 10"),
+            ], { show: collab }),
+            q("c3", "Comment ces collaborations sont-elles généralement arrivées ?", "How did these collaborations usually come about?", M, [
+              o("marque", "La marque m'a contacté directement", "The brand contacted me directly"),
+              o("moi", "J'ai contacté la marque", "I contacted the brand"),
+              o("relation", "Une connaissance m'a mis en relation", "Someone I know connected us"),
+              o("agence", "Mon manager ou une agence", "My manager or an agency"),
+              o("plateforme", "Via une plateforme spécialisée", "Through a specialised platform"),
+            ], { other: 1, show: collab }),
+            q("c4", "Qu'avez-vous reçu en échange ?", "What did you receive in return?", M, [
+              o("argent", "Un paiement en argent", "A cash payment"),
+              o("produits", "Des produits ou services offerts", "Free products or services"),
+              o("commission", "Une commission / un code promo sur les ventes", "A commission / promo code on sales"),
+              o("visibilite", "Seulement de la visibilité", "Only visibility"),
+            ], { show: collab }),
+            q("c5", "Comment êtes-vous payé(e) ?", "How do you get paid?", M, [
+              o("momo", "MTN Mobile Money"),
+              o("om", "Orange Money"),
+              o("wave", "Wave"),
+              o("especes", "Espèces", "Cash"),
+              o("virement", "Virement bancaire", "Bank transfer"),
+              o("intl", "PayPal / paiement international", "PayPal / international payment"),
+            ], { other: 1, show: paid }),
+            q("c6", "Qui gère vos collaborations ?", "Who manages your collaborations?", U, [
+              o("seul", "Je gère tout seul(e)", "I handle everything myself"),
+              o("proche", "Un proche m'aide", "A friend or relative helps me"),
+              o("manager", "Un manager", "A manager"),
+              o("agence", "Une agence", "An agency"),
+            ], { show: collab }),
+            q("c7", "Quelle commission prend votre manager ou agence ?", "What commission does your manager or agency take?", U, [
+              o("lt10", "Moins de 10 %", "Less than 10%"),
+              o("10_20", "10 – 20 %"),
+              o("20_30", "20 – 30 %"),
+              o("gt30", "Plus de 30 %", "More than 30%"),
+              nsp,
+            ], { show: (E) => has(E, "c6", "manager", "agence") }),
+            q("c8", "Parmi ces étapes, lesquelles vous posent le plus de difficultés ?", "Which of these steps are the hardest for you?", M, [
+              o("trouver", "Trouver des marques intéressées par mon profil", "Finding brands interested in my profile"),
+              o("contacter", "Savoir qui contacter", "Knowing who to contact"),
+              o("presenter", "Présenter mon profil et mes statistiques", "Presenting my profile and stats"),
+              o("prix", "Savoir combien demander", "Knowing how much to charge"),
+              o("negocier", "Négocier le prix", "Negotiating the price"),
+              o("comprendre", "Comprendre ce que la marque attend réellement", "Understanding what the brand really expects"),
+              o("prestation", "Définir ce que comprend ma prestation", "Defining what my service includes"),
+              o("organiser", "Organiser le travail et respecter les délais", "Organising the work and meeting deadlines"),
+              o("paiement", "Être payé(e) correctement et à temps", "Getting paid correctly and on time"),
+              o("suivi", "Faire le suivi après la publication", "Following up after publishing"),
+            ], { other: 1, max: 3, show: collab }),
+            q("c9", "Qu'est-ce qui vous empêche principalement d'obtenir une collaboration ?", "What mainly prevents you from getting a collaboration?", U, [
+              o("quelles", "Je ne sais pas quelles marques contacter", "I don't know which brands to contact"),
+              o("approcher", "Je ne sais pas comment les approcher", "I don't know how to approach them"),
+              o("prix", "Je ne sais pas combien demander", "I don't know how much to charge"),
+              o("presenter", "Je ne sais pas comment présenter mon profil", "I don't know how to present my profile"),
+              o("visibilite", "Je manque de visibilité auprès des marques", "Brands don't see me"),
+              o("audience", "Mon audience n'est pas encore assez développée", "My audience isn't big enough yet"),
+              o("desaccord", "Des marques m'ont contacté mais nous ne nous sommes pas mis d'accord", "Brands contacted me but we didn't agree"),
+              o("nature", "On me propose surtout des produits, pas d'argent", "I'm mostly offered products, not money"),
+              o("fonctionnement", "Je ne sais pas comment fonctionne une collaboration", "I don't know how a collaboration works"),
+            ], { other: 1, show: (E) => has(E, "c1", "non") }),
           ],
         },
         {
-          t: "Le problème le plus important",
+          fr: "Accords et paiements",
+          en: "Agreements and payments",
           q: [
-            q(
-              "3.1",
-              "Imaginez que vous recevez demain une proposition intéressante d'une marque. Qu'est-ce qui pourrait vous faire hésiter ou vous mettre en difficulté ?",
-              M,
-              [
-                "Je ne sais pas si le prix proposé est correct",
-                "Je ne sais pas quoi répondre à la marque",
-                "Je ne sais pas exactement ce que je dois accepter ou refuser",
-                "Je ne comprends pas bien les conditions proposées",
-                "Je ne sais pas comment négocier",
-                "Je crains d'accepter trop de travail pour le prix proposé",
-                "Je ne sais pas comment organiser la collaboration",
-                "J'ai peur de ne pas être payé correctement ou à temps",
-                "!Je ne rencontre pas vraiment ce problème",
-              ],
-              { other: 1, max: 3 },
-            ),
-            q(
-              "3.2",
-              "Quelle tâche vous prend actuellement le plus de temps en dehors de la création de contenu ?",
-              U,
-              [
-                "Chercher des opportunités",
-                "Contacter les marques",
-                "Répondre aux messages",
-                "Négocier",
-                "Préparer des propositions / devis",
-                "Organiser les collaborations",
-                "Faire le suivi des paiements",
-                "Analyser mes statistiques",
-                "Préparer des documents",
-                "Aucune en particulier",
-              ],
-              { other: 1 },
-            ),
-            q(
-              "3.3",
-              "Selon vous, quel est aujourd'hui le principal problème d'un créateur qui souhaite vivre de son activité ?",
-              T,
-            ),
+            q("d1", "Signez-vous un contrat avec la marque ?", "Do you sign a contract with the brand?", U, [
+              o("toujours", "Toujours", "Always"),
+              o("parfois", "Parfois", "Sometimes"),
+              o("oral", "Non, accord oral ou par message seulement", "No, only a verbal or chat agreement"),
+              o("jamais", "Jamais rien de formel", "Never anything formal"),
+            ], { show: collab }),
+            q("d2", "Demandez-vous un acompte avant de commencer ?", "Do you ask for a deposit before starting?", U, [
+              o("toujours", "Toujours", "Always"),
+              o("parfois", "Parfois", "Sometimes"),
+              o("jamais", "Jamais", "Never"),
+            ], { show: paid }),
+            q("d3", "Avez-vous déjà rencontré l'un de ces problèmes de paiement ?", "Have you ever faced any of these payment problems?", M, [
+              o("retard", "Paiement en retard", "Late payment"),
+              o("moins", "Payé(e) moins que prévu", "Paid less than agreed"),
+              o("impaye", "Jamais payé(e)", "Never paid"),
+              o("nature", "Payé(e) en produits au lieu de l'argent prévu", "Paid in products instead of the agreed money"),
+              o("aucun", "Aucun problème", "No problems", 1),
+            ], { show: paid }),
+            q("d4", "Sur vos 10 dernières collaborations payées, combien ont posé un problème de paiement ?", "Out of your last 10 paid collaborations, how many had a payment problem?", U, [
+              o("1", "1"),
+              o("2_3", "2 – 3"),
+              o("4_6", "4 – 6"),
+              o("7p", "7 ou plus", "7 or more"),
+            ], { show: (E) => has(E, "d3", "retard", "moins", "impaye", "nature") }),
+            q("d5", "Où se passent vos échanges avec les marques ?", "Where do your conversations with brands take place?", M, [
+              o("whatsapp", "WhatsApp"),
+              o("messenger", "Messenger"),
+              o("telegram", "Telegram"),
+              o("dm_ig", "Messages privés Instagram", "Instagram DMs"),
+              o("dm_tt", "Messages privés TikTok", "TikTok DMs"),
+              o("email", "E-mail", "Email"),
+              o("tel", "Appels téléphoniques", "Phone calls"),
+              o("presentiel", "En personne", "In person"),
+            ], { other: 1, show: collab }),
+            q("d6", "Après la publication, envoyez-vous un bilan (vues, likes, captures…) à la marque ?", "After publishing, do you send the brand a report (views, likes, screenshots…)?", U, [
+              o("toujours", "Oui, systématiquement", "Yes, every time"),
+              o("demande", "Seulement si la marque le demande", "Only if the brand asks"),
+              o("non", "Non", "No"),
+            ], { show: collab }),
           ],
         },
         {
+          fr: "Vos comptes et vos statistiques",
+          en: "Your accounts and stats",
+          intro: {
+            fr: "Ces réponses nous aident à savoir quelles statistiques Linkaro pourra récupérer automatiquement.",
+            en: "These answers help us know which stats Linkaro will be able to fetch automatically.",
+          },
           q: [
-            q(
-              "4.1",
-              "Parmi les possibilités suivantes, lesquelles vous seraient les plus utiles ?",
-              M,
-              [
-                "Créer automatiquement mon profil professionnel à partir de mes réseaux sociaux et de mes statistiques",
-                "Créer automatiquement un Media Kit que je peux envoyer à une marque",
-                "M'aider à trouver des marques susceptibles d'être intéressées par mon profil",
-                "Me conseiller sur mes tarifs selon la prestation demandée",
-                "M'aider à négocier une proposition reçue d'une marque",
-                "Centraliser mes collaborations dans un seul endroit",
-                "M'aider à préparer des propositions commerciales et autres documents",
-                "Analyser mes collaborations et mes résultats pour mieux comprendre ce qui fonctionne",
-              ],
-              { other: 1, max: 4 },
-            ),
-            q(
-              "4.2",
-              "Parmi ces fonctionnalités, laquelle serait pour vous la plus importante ?",
-              U,
-              [
-                "Trouver des marques",
-                "Mieux vendre mon profil",
-                "Savoir combien facturer",
-                "Mieux négocier",
-                "Gérer mes collaborations",
-                "Gagner du temps dans les tâches administratives",
-                "Comprendre mes performances",
-              ],
-              { other: 1 },
-            ),
+            q("s1", "Votre compte Instagram est :", "Your Instagram account is:", U, [
+              o("perso", "Un compte personnel", "A personal account"),
+              o("createur", "Un compte créateur", "A creator account"),
+              o("entreprise", "Un compte entreprise", "A business account"),
+              nsp,
+            ], { show: (E) => has(E, "a1", "instagram") }),
+            q("s2", "Sur Facebook, vous publiez depuis :", "On Facebook, you post from:", U, [
+              o("profil", "Mon profil personnel", "My personal profile"),
+              o("pro", "Mon profil en mode professionnel", "My profile in professional mode"),
+              o("page", "Une Page", "A Page"),
+              o("both", "Mon profil et une Page", "My profile and a Page"),
+              nsp,
+            ], { show: (E) => has(E, "a1", "facebook") }),
+            q("s3", "Votre compte TikTok est :", "Your TikTok account is:", U, [
+              o("perso", "Un compte personnel", "A personal account"),
+              o("business", "Un compte professionnel (Business)", "A business account"),
+              nsp,
+            ], { show: (E) => has(E, "a1", "tiktok") }),
+            q("s4", "Consultez-vous les statistiques de vos publications ?", "Do you check your post statistics?", U, [
+              o("souvent", "Souvent", "Often"),
+              o("parfois", "Parfois", "Sometimes"),
+              o("jamais", "Jamais", "Never"),
+              o("introuvable", "Je ne sais pas où les trouver", "I don't know where to find them"),
+            ]),
+            q("s5", "Connaissez-vous votre taux d'engagement (likes, commentaires et partages par rapport à vos abonnés ou à vos vues) ?", "Do you know your engagement rate (likes, comments and shares compared to your followers or views)?", U, [
+              o("oui", "Oui, je le connais", "Yes, I know it"),
+              o("vague", "J'en ai entendu parler mais je ne le calcule pas", "I've heard of it but don't calculate it"),
+              o("non", "Non, je ne sais pas ce que c'est", "No, I don't know what it is"),
+            ]),
+            q("s6", "Que vous demandent les marques pour évaluer votre profil ?", "What do brands ask for to assess your profile?", M, [
+              o("abonnes", "Mon nombre d'abonnés", "My follower count"),
+              o("vues", "Mes vues moyennes", "My average views"),
+              o("engagement", "Mon taux d'engagement", "My engagement rate"),
+              o("audience", "L'âge / le pays de mon audience", "My audience's age / country"),
+              o("captures", "Des captures d'écran de mes statistiques", "Screenshots of my stats"),
+              o("resultats", "Les résultats de mes collaborations passées", "Results of past collaborations"),
+              o("rien", "Elles ne demandent rien", "They don't ask for anything", 1),
+            ], { other: 1, show: collab }),
+            q("s7", "Accepteriez-vous de connecter vos comptes à Linkaro pour qu'il récupère automatiquement vos statistiques ?", "Would you connect your accounts to Linkaro so it can fetch your stats automatically?", U, [
+              o("oui", "Oui", "Yes"),
+              o("oui_si", "Oui, si je comprends exactement ce qui est récupéré", "Yes, if I understand exactly what is collected"),
+              o("non", "Non, je préfère saisir mes chiffres moi-même", "No, I'd rather enter my numbers myself"),
+              nsp,
+            ]),
+            q("s8", "Pourquoi préférez-vous ne pas connecter vos comptes ?", "Why would you rather not connect your accounts?", M, [
+              o("securite", "Peur pour la sécurité de mon compte", "Worried about my account's security"),
+              o("prive", "Je veux garder mes statistiques privées", "I want to keep my stats private"),
+              o("complique", "Ça me semble compliqué", "It seems complicated"),
+            ], { other: 1, show: (E) => has(E, "s7", "non") }),
           ],
         },
         {
-          t: "Les échanges avec les marques",
+          fr: "Vos tarifs",
+          en: "Your rates",
           q: [
-            q(
-              "5.1",
-              "Aujourd'hui, les échanges avec une marque se passent principalement où ?",
-              U,
-              [
-                "WhatsApp",
-                "Messenger",
-                "Telegram",
-                "Instagram",
-                "E-mail",
-                "Plusieurs canaux selon la marque",
-              ],
-              { other: 1 },
-            ),
-            q(
-              "5.2",
-              "Quelle expérience vous semblerait la plus pratique ?",
-              U,
-              [
-                "Tout centraliser dans Linkaro : messages, informations de la collaboration et suivi au même endroit.",
-                "Continuer à utiliser WhatsApp / Messenger / Telegram, mais pouvoir demander de l'aide à Linkaro pendant les échanges.",
-                "Pouvoir transférer une conversation à Linkaro afin qu'il m'aide à comprendre la proposition et préparer ma réponse.",
-                "Pouvoir choisir selon la situation.",
-                "Je préfère garder les échanges totalement séparés de Linkaro.",
-              ],
-            ),
-            q(
-              "5.3",
-              "Imaginez qu'une marque vous envoie ce message. Que souhaiteriez-vous que Linkaro puisse faire ?",
-              M,
-              [
-                "Analyser le message et m'expliquer ce que la marque demande",
-                "Me proposer une réponse",
-                "Me conseiller un tarif",
-                "Préparer une proposition commerciale complète",
-                "!Tout cela",
-                "!Je préfère rédiger moi-même ma réponse",
-              ],
-              {
-                quote:
-                  "Bonjour, nous aimerions travailler avec vous pour promouvoir notre nouveau produit. Pouvez-vous nous envoyer vos tarifs ?",
+            q("t1", "Si une marque vous demande vos tarifs aujourd'hui, que faites-vous ?", "If a brand asks for your rates today, what do you do?", U, [
+              o("grille", "J'envoie ma grille tarifaire", "I send my rate card"),
+              o("feeling", "Je donne un prix selon la situation", "I give a price depending on the situation"),
+              o("budget", "Je demande d'abord le budget de la marque", "I first ask for the brand's budget"),
+              o("agent", "Mon manager / agence s'en occupe", "My manager / agency handles it"),
+              o("nsp", "Je ne sais pas quoi répondre", "I don't know what to answer"),
+            ]),
+            q("t2", "Combien demandez-vous en général pour une vidéo sponsorisée sur votre plateforme principale ?", "How much do you usually charge for one sponsored video on your main platform?", U, [
+              o("lt10k", "Moins de 10 000 FCFA", "Under 10,000 FCFA"),
+              o("10_25k", "10 000 – 25 000 FCFA"),
+              o("25_50k", "25 000 – 50 000 FCFA"),
+              o("50_100k", "50 000 – 100 000 FCFA"),
+              o("100_250k", "100 000 – 250 000 FCFA"),
+              o("250_500k", "250 000 – 500 000 FCFA"),
+              o("500k_1m", "500 000 – 1 000 000 FCFA"),
+              o("gt1m", "Plus de 1 000 000 FCFA", "Over 1,000,000 FCFA"),
+              o("nd", "Je préfère ne pas répondre", "I'd rather not say"),
+            ], { show: (E) => paid(E) && has(E, "t1", "grille", "feeling", "budget") }),
+            q("t3", "Qu'est-ce qui devrait le plus influencer votre prix ?", "What should influence your price the most?", M, [
+              o("abonnes", "Mon nombre d'abonnés", "My follower count"),
+              o("engagement", "Mon taux d'engagement (réactions de mon audience)", "My engagement rate (how my audience reacts)"),
+              o("vues", "Mes vues moyennes", "My average views"),
+              o("format", "Le format (story, vidéo, post…)", "The format (story, video, post…)"),
+              o("travail", "Le travail demandé (tournage, montage, révisions)", "The work involved (filming, editing, revisions)"),
+              o("droits", "La réutilisation de mon contenu par la marque (publicité)", "The brand reusing my content (ads)"),
+              o("exclusivite", "L'exclusivité demandée", "Exclusivity requested"),
+              o("delai", "Le délai", "The deadline"),
+              o("deplacement", "Les déplacements", "Travel"),
+              o("marque", "La taille de la marque", "The size of the brand"),
+            ], { max: 4 }),
+            q("t4", "Vos tarifs actuels vous semblent-ils justes par rapport à votre travail ?", "Do your current rates feel fair for the work you do?", U, [
+              o("souspaye", "Non, je pense être sous-payé(e)", "No, I think I'm underpaid"),
+              o("juste", "Oui, plutôt justes", "Yes, fairly"),
+              o("surpaye", "Je pense être au-dessus du marché", "I think I'm above the market"),
+              nsp,
+            ], { show: paid }),
+          ],
+        },
+        {
+          fr: "Le problème le plus important",
+          en: "The biggest problem",
+          q: [
+            q("b1", "Imaginez que vous recevez demain une proposition intéressante d'une marque. Qu'est-ce qui pourrait vous faire hésiter ?", "Imagine you receive an interesting brand offer tomorrow. What might make you hesitate?", M, [
+              o("prix", "Je ne sais pas si le prix proposé est correct", "I don't know if the price is right"),
+              o("repondre", "Je ne sais pas quoi répondre à la marque", "I don't know how to reply"),
+              o("accepter", "Je ne sais pas ce que je dois accepter ou refuser", "I don't know what to accept or refuse"),
+              o("conditions", "Je ne comprends pas bien les conditions", "I don't fully understand the terms"),
+              o("negocier", "Je ne sais pas comment négocier", "I don't know how to negotiate"),
+              o("travail", "Je crains d'accepter trop de travail pour le prix", "I'm afraid of taking on too much work for the price"),
+              o("paiement", "J'ai peur de ne pas être payé(e) correctement ou à temps", "I'm afraid of not being paid properly or on time"),
+              o("aucun", "Rien, je saurais gérer", "Nothing, I'd manage", 1),
+            ], { other: 1, max: 3, show: (E) => has(E, "c1", "non") }),
+            q("b2", "Quelle tâche vous prend le plus de temps en dehors de la création de contenu ?", "Which task takes most of your time apart from creating content?", U, [
+              o("chercher", "Chercher des opportunités", "Looking for opportunities"),
+              o("contacter", "Contacter les marques", "Contacting brands"),
+              o("messages", "Répondre aux messages", "Replying to messages"),
+              o("negocier", "Négocier", "Negotiating"),
+              o("devis", "Préparer des propositions / devis", "Preparing proposals / quotes"),
+              o("organiser", "Organiser les collaborations", "Organising collaborations"),
+              o("paiements", "Relancer et suivre les paiements", "Chasing and tracking payments"),
+              o("stats", "Analyser mes statistiques", "Analysing my stats"),
+              o("aucune", "Aucune en particulier", "None in particular"),
+            ], { other: 1 }),
+            q("b3", "Selon vous, quel est le principal problème d'un créateur qui veut vivre de son activité ?", "In your opinion, what is the main problem for a creator who wants to make a living?", T),
+          ],
+        },
+        {
+          fr: "Ce que Linkaro pourrait faire",
+          en: "What Linkaro could do",
+          q: [
+            q("f1", "Parmi ces possibilités, lesquelles vous seraient les plus utiles ?", "Which of these would be the most useful to you?", M, [
+              o("profil", "Créer automatiquement mon profil professionnel à partir de mes réseaux", "Automatically build my professional profile from my accounts"),
+              o("mediakit", "Créer un media kit à envoyer aux marques", "Create a media kit to send to brands"),
+              o("verif", "Afficher mes statistiques vérifiées et mon taux d'engagement pour rassurer les marques", "Show my verified stats and engagement rate to reassure brands"),
+              o("marques", "M'aider à trouver des marques intéressées par mon profil", "Help me find brands interested in my profile"),
+              o("tarifs", "Me conseiller sur mes tarifs", "Advise me on my rates"),
+              o("negociation", "M'aider à négocier une proposition", "Help me negotiate an offer"),
+              o("centraliser", "Centraliser mes collaborations au même endroit", "Keep all my collaborations in one place"),
+              o("paiements", "Suivre mes paiements et relancer les marques", "Track my payments and remind brands"),
+              o("documents", "Préparer devis, contrats, factures et autres documents", "Prepare quotes, contracts, invoices and other documents"),
+              o("analyse", "Analyser mes résultats pour comprendre ce qui fonctionne", "Analyse my results to see what works"),
+            ], { other: 1, max: 4 }),
+            q("f2", "Parmi celles que vous avez choisies, laquelle est la plus importante ?", "Of those you picked, which one matters most?", U, [], { from: "f1" }),
+          ],
+        },
+        {
+          fr: "Les échanges avec les marques",
+          en: "Conversations with brands",
+          q: [
+            q("e1", "Quelle expérience vous semblerait la plus pratique ?", "Which experience would feel most practical?", U, [
+              o("centraliser", "Tout faire dans Linkaro : messages, informations et suivi au même endroit", "Do everything in Linkaro: messages, details and tracking in one place"),
+              o("aide", "Rester sur WhatsApp / Messenger / Telegram, mais pouvoir demander de l'aide à Linkaro", "Stay on WhatsApp / Messenger / Telegram but be able to ask Linkaro for help"),
+              o("transfert", "Transférer un message à Linkaro pour qu'il m'aide à comprendre et à répondre", "Forward a message to Linkaro so it helps me understand and reply"),
+              o("choix", "Pouvoir choisir selon la situation", "Choose depending on the situation"),
+              o("separe", "Garder les échanges totalement séparés de Linkaro", "Keep conversations completely separate from Linkaro"),
+            ]),
+            q("e2", "Où aimeriez-vous parler à l'assistant Linkaro ?", "Where would you like to talk to the Linkaro assistant?", U, [
+              o("whatsapp", "Sur WhatsApp", "On WhatsApp"),
+              o("telegram", "Sur Telegram", "On Telegram"),
+              o("messenger", "Sur Messenger", "On Messenger"),
+              o("app", "Directement dans l'application Linkaro", "Directly in the Linkaro app"),
+            ], { show: (E) => has(E, "e1", "aide", "transfert", "choix") }),
+            q("e3", "Une marque vous envoie ce message. Que souhaiteriez-vous que Linkaro fasse ?", "A brand sends you this message. What would you like Linkaro to do?", M, [
+              o("analyser", "M'expliquer ce que la marque demande", "Explain what the brand is asking for"),
+              o("reponse", "Me proposer une réponse", "Suggest a reply"),
+              o("tarif", "Me conseiller un tarif", "Suggest a rate"),
+              o("proposition", "Préparer une proposition commerciale complète", "Prepare a full commercial proposal"),
+              o("tout", "Tout cela", "All of the above", 1),
+              o("moi", "Rien, je préfère rédiger moi-même", "Nothing, I'd rather write it myself", 1),
+            ], {
+              quote: {
+                fr: "Bonjour, nous aimerions travailler avec vous pour promouvoir notre nouveau produit. Pouvez-vous nous envoyer vos tarifs ?",
+                en: "Hello, we'd like to work with you to promote our new product. Could you send us your rates?",
               },
-            ),
+              show: (E) => !has(E, "e1", "separe"),
+            }),
           ],
         },
         {
-          t: "Documents et aide à la gestion",
+          fr: "Documents",
+          en: "Documents",
           q: [
-            q(
-              "6.1",
-              "Quels documents aimeriez-vous pouvoir préparer plus facilement ?",
-              M,
-              [
-                "Media Kit",
-                "Proposition commerciale",
-                "Devis / offre de prestation",
-                "Contrat",
-                "Brief de collaboration",
-                "Plan de contenu",
-                "Proposition de stratégie de communication",
-                "Rapport de collaboration / résultats",
-                "Facture / justificatif de paiement",
-              ],
-              { other: 1 },
-            ),
-            q("6.2", "Quel niveau d'aide préférez-vous ?", U, [
-              "Linkaro prépare le document et je le modifie",
-              "Linkaro me propose une première version que je valide",
-              "Je veux surtout des modèles prêts à personnaliser",
-              "Je préfère tout rédiger moi-même",
+            q("g1", "Quels documents aimeriez-vous préparer plus facilement ?", "Which documents would you like to prepare more easily?", M, [
+              o("mediakit", "Media kit"),
+              o("proposition", "Proposition commerciale", "Commercial proposal"),
+              o("devis", "Devis / offre de prestation", "Quote"),
+              o("contrat", "Contrat / récapitulatif d'accord", "Contract / agreement summary"),
+              o("brief", "Brief de collaboration", "Collaboration brief"),
+              o("plan", "Plan de contenu", "Content plan"),
+              o("rapport", "Rapport de résultats", "Results report"),
+              o("facture", "Facture / reçu", "Invoice / receipt"),
+              o("aucun", "Aucun, je n'en ai pas besoin", "None, I don't need any", 1),
+            ], { other: 1 }),
+            q("g2", "Quel niveau d'aide préférez-vous ?", "What level of help do you prefer?", U, [
+              o("prepare", "Linkaro prépare le document et je le modifie", "Linkaro prepares it and I edit it"),
+              o("valide", "Linkaro propose une première version que je valide", "Linkaro suggests a first draft I approve"),
+              o("modeles", "Je veux surtout des modèles à personnaliser", "Mostly templates I can customise"),
+              o("moi", "Je préfère tout rédiger moi-même", "I'd rather write everything myself"),
+            ], { show: (E) => (E.g1 || []).length && !has(E, "g1", "aucun") }),
+          ],
+        },
+        {
+          fr: "Les opportunités",
+          en: "Opportunities",
+          q: [
+            q("o1", "Comment aimeriez-vous découvrir de nouvelles opportunités ?", "How would you like to discover new opportunities?", U, [
+              o("liste", "Voir une liste de marques susceptibles de travailler avec moi", "See a list of brands likely to work with me"),
+              o("recevoir", "Recevoir les opportunités qui correspondent à mon profil", "Receive opportunities that match my profile"),
+              o("pertinentes", "Recevoir uniquement les opportunités très pertinentes", "Only receive highly relevant opportunities"),
+              o("rechercher", "Rechercher moi-même les marques", "Search for brands myself"),
+              o("les_deux", "Les deux : recommandations + recherche libre", "Both: recommendations + free search"),
+              o("marques", "Je préfère que les marques viennent vers moi", "I'd rather brands come to me"),
             ]),
+            q("o2", "Qu'est-ce qui rendrait une opportunité intéressante pour vous ?", "What would make an opportunity attractive to you?", M, [
+              o("budget", "Le budget", "The budget"),
+              o("contenu", "La compatibilité avec mon contenu", "Fit with my content"),
+              o("audience", "La compatibilité avec mon audience", "Fit with my audience"),
+              o("reputation", "La réputation de la marque", "The brand's reputation"),
+              o("long_terme", "La possibilité de travailler sur le long terme", "Long-term potential"),
+              o("liberte", "La liberté créative", "Creative freedom"),
+              o("localisation", "La localisation de la marque", "The brand's location"),
+              o("paiement", "La garantie d'être payé(e)", "A guarantee of being paid"),
+              o("visibilite", "Le potentiel de visibilité", "Visibility potential"),
+            ], { other: 1, max: 4 }),
           ],
         },
         {
-          t: "Les opportunités",
+          fr: "Jusqu'où Linkaro devrait aller ?",
+          en: "How far should Linkaro go?",
+          intro: {
+            fr: "Cette partie est importante pour comprendre votre vision.",
+            en: "This part helps us understand your vision.",
+          },
           q: [
-            q(
-              "7.1",
-              "Comment aimeriez-vous découvrir de nouvelles opportunités ?",
-              U,
-              [
-                "Voir une liste de marques susceptibles de travailler avec moi",
-                "Recevoir des opportunités correspondant à mon profil",
-                "Recevoir uniquement les opportunités très pertinentes",
-                "Pouvoir rechercher moi-même les marques",
-                "Les deux : recommandations + recherche libre",
-                "Je préfère que les marques viennent directement vers moi",
-              ],
-            ),
-            q(
-              "7.2",
-              "Qu'est-ce qui rendrait une opportunité intéressante pour vous ?",
-              M,
-              [
-                "Le budget",
-                "La compatibilité avec mon contenu",
-                "La compatibilité avec mon audience",
-                "La réputation de la marque",
-                "La durée de la collaboration",
-                "La possibilité de travailler sur le long terme",
-                "La liberté créative",
-                "La localisation de la marque",
-                "Le potentiel de visibilité",
-              ],
-              { other: 1, max: 4 },
-            ),
+            q("r1", "Laquelle de ces descriptions correspond le mieux à ce que Linkaro devrait devenir ?", "Which description best fits what Linkaro should become?", U, [
+              o("outil", "Un outil : je gère mon activité, Linkaro m'aide", "A tool: I run my business, Linkaro helps"),
+              o("assistant", "Un assistant : Linkaro m'aide à décider et à gagner du temps", "An assistant: Linkaro helps me decide and save time"),
+              o("plateforme", "Une plateforme d'opportunités : Linkaro m'aide à trouver des marques", "An opportunity platform: Linkaro helps me find brands"),
+              o("intermediaire", "Un intermédiaire : Linkaro facilite les échanges avec les marques", "An intermediary: Linkaro facilitates exchanges with brands"),
+              o("representant", "Un représentant : Linkaro négocie certaines collaborations pour moi", "A representative: Linkaro negotiates some deals for me"),
+              o("combinaison", "Une combinaison de plusieurs de ces rôles", "A combination of these roles"),
+            ]),
+            q("r2", "Seriez-vous à l'aise si Linkaro négociait un jour directement avec une marque en votre nom ?", "Would you be comfortable with Linkaro one day negotiating with a brand on your behalf?", U, [
+              o("oui", "Oui, sans problème", "Yes, no problem"),
+              o("approbation", "Oui, mais avec mon approbation avant chaque accord", "Yes, but with my approval before each deal"),
+              o("certaines", "Oui, pour certaines collaborations seulement", "Yes, for some collaborations only"),
+              o("non", "Non, je préfère toujours négocier moi-même", "No, I'd always rather negotiate myself"),
+              nsp,
+            ]),
+            q("r3", "Dans quelles situations accepteriez-vous que Linkaro vous représente ?", "In which situations would you accept Linkaro representing you?", M, [
+              o("trouver", "Pour trouver des marques", "To find brands"),
+              o("tarifs", "Pour négocier les tarifs", "To negotiate rates"),
+              o("conditions", "Pour négocier les conditions", "To negotiate terms"),
+              o("gerer", "Pour gérer la collaboration", "To manage the collaboration"),
+              o("plusieurs", "Pour gérer plusieurs marques en même temps", "To handle several brands at once"),
+              o("importantes", "Pour les collaborations importantes uniquement", "Only for big collaborations"),
+            ], { other: 1, show: (E) => has(E, "r2", "oui", "approbation", "certaines") }),
+            q("r4", "Quelle façon de payer Linkaro vous semblerait normale ?", "Which way of paying for Linkaro would feel fair?", U, [
+              o("gratuit", "Je ne l'utiliserais que s'il est gratuit", "I'd only use it if it's free"),
+              o("abo", "Un petit abonnement mensuel", "A small monthly subscription"),
+              o("commission", "Une commission seulement sur les collaborations obtenues grâce à Linkaro", "A commission only on deals obtained through Linkaro"),
+              o("usage", "Payer seulement les services que j'utilise", "Pay only for the services I use"),
+              nsp,
+            ]),
+            q("r5", "Quel montant mensuel vous semblerait acceptable ?", "What monthly amount would feel acceptable?", U, [
+              o("lt1000", "Moins de 1 000 FCFA", "Under 1,000 FCFA"),
+              o("1000_2500", "1 000 – 2 500 FCFA"),
+              o("2500_5000", "2 500 – 5 000 FCFA"),
+              o("5000_10000", "5 000 – 10 000 FCFA"),
+              o("gt10000", "Plus de 10 000 FCFA", "Over 10,000 FCFA"),
+            ], { show: (E) => has(E, "r4", "abo") }),
+            q("r6", "Quelle commission vous semblerait acceptable ?", "What commission would feel acceptable?", U, [
+              o("5", "5 %"),
+              o("10", "10 %"),
+              o("15", "15 %"),
+              o("20", "20 %"),
+              o("gt20", "Plus de 20 %", "More than 20%"),
+            ], { show: (E) => has(E, "r4", "commission") }),
           ],
         },
         {
-          t: "Jusqu'où Linkaro devrait aller ?",
-          intro: "Cette partie est importante pour comprendre votre vision.",
+          fr: "Votre vision de Linkaro",
+          en: "Your vision of Linkaro",
           q: [
-            q(
-              "8.1",
-              "Parmi ces descriptions, laquelle correspond le mieux à ce que vous aimeriez que Linkaro devienne ?",
-              U,
-              [
-                "Un outil : je gère moi-même mon activité, Linkaro m'aide.",
-                "Un assistant : Linkaro m'aide à prendre les bonnes décisions et à gagner du temps.",
-                "Une plateforme d'opportunités : Linkaro m'aide à trouver des marques et des collaborations.",
-                "Un intermédiaire : Linkaro facilite les échanges et les collaborations entre marques et créateurs.",
-                "Un représentant : Linkaro peut négocier certaines collaborations pour moi.",
-                "Une combinaison de plusieurs de ces rôles.",
-              ],
-            ),
-            q(
-              "8.2",
-              "Seriez-vous à l'aise avec l'idée que Linkaro puisse un jour négocier directement avec une marque en votre nom ?",
-              U,
-              [
-                "Oui, sans problème",
-                "Oui, mais uniquement avec mon approbation avant chaque accord",
-                "Oui, pour certaines collaborations seulement",
-                "Non, je préfère toujours négocier moi-même",
-                "Je ne sais pas encore",
-              ],
-            ),
-            q(
-              "8.3",
-              "Dans quelles situations pourriez-vous accepter que Linkaro vous représente ?",
-              M,
-              [
-                "Pour trouver des marques",
-                "Pour négocier les tarifs",
-                "Pour négocier les conditions",
-                "Pour gérer la collaboration",
-                "Pour gérer plusieurs marques en même temps",
-                "Pour des collaborations importantes uniquement",
-              ],
-              { other: 1, show: yes },
-            ),
-          ],
-        },
-        {
-          t: "Votre vision de Linkaro",
-          q: [
-            q(
-              "9.1",
-              "Si Linkaro existait déjà aujourd'hui, quelle serait la première chose que vous voudriez lui demander ?",
-              T,
-            ),
-            q(
-              "9.2",
-              "Quel problème Linkaro devrait absolument résoudre pour que vous vous disiez : « Cet outil m'est vraiment utile » ?",
-              T,
-            ),
-            q(
-              "9.3",
-              "Qu'est-ce qui pourrait vous faire abandonner rapidement Linkaro ?",
-              T,
-            ),
-            q(
-              "9.4",
-              "Y a-t-il une fonctionnalité ou une idée que vous aimeriez voir dans Linkaro et que nous n'avons pas évoquée ?",
-              T,
-            ),
+            q("v1", "Si Linkaro existait aujourd'hui, quelle serait la première chose que vous lui demanderiez ?", "If Linkaro existed today, what's the first thing you'd ask it?", T),
+            q("v2", "Quel problème Linkaro devrait absolument résoudre pour vous être vraiment utile ?", "Which problem must Linkaro solve to be truly useful to you?", T),
+            q("v3", "Qu'est-ce qui pourrait vous faire abandonner rapidement Linkaro ?", "What could make you quickly stop using Linkaro?", T),
+            q("v4", "Une idée ou une fonctionnalité que nous n'avons pas évoquée ?", "Any idea or feature we haven't mentioned?", T),
+            q("v5", "Accepteriez-vous d'être recontacté(e) pour tester Linkaro en avant-première ?", "Would you agree to be contacted to try Linkaro early?", U, [
+              o("oui", "Oui", "Yes"),
+              o("non", "Non", "No"),
+            ]),
+            q("v6", "Votre numéro WhatsApp ou e-mail (utilisé uniquement pour vous recontacter)", "Your WhatsApp number or email (only used to contact you)", T, [], {
+              short: 1,
+              show: (E) => has(E, "v5", "oui"),
+            }),
           ],
         },
       ];
-      const Q = {};
-      S.forEach((s) => s.q.forEach((x) => (Q[x.id] = x)));
+
+      const UI = {
+        fr: {
+          title: "Comprendre les besoins des créateurs et construire Linkaro avec eux",
+          lead: "Linkaro aide les créateurs de contenu à mieux développer et gérer leurs collaborations avec les marques et entreprises.",
+          intro: "Avant de définir le produit, nous voulons comprendre votre activité, les difficultés que vous rencontrez réellement et la manière dont vous aimeriez être accompagné. Les questions s'adaptent à vos réponses. Il n'y a pas de bonne ou de mauvaise réponse. Comptez 8 à 12 minutes.",
+          start: "Commencer", resume: "Reprendre", back: "Retour", next: "Continuer", send: "Envoyer mes réponses",
+          sec: (i, n) => `Section ${i} sur ${n}`, done: "Terminé",
+          free: "Réponse libre, facultative", one: "Une seule réponse", many: "Plusieurs réponses possibles", upto: (n) => `Jusqu'à ${n} réponses`,
+          other: "Autre", precise: "Précisez", answer: "Votre réponse",
+          req: "Choisissez une réponse pour continuer.", reqOther: "Précisez votre réponse « Autre ».",
+          hashErr: "Impossible de générer l'identifiant de cette réponse. Vérifiez votre connexion puis réessayez.",
+          thanks: "Merci pour vos réponses",
+          thanksLead: "Ce questionnaire sert à construire Linkaro à partir de la réalité des créateurs, et non uniquement d'hypothèses.",
+          thanksMut: "Vos réponses nous aideront à définir les fonctionnalités prioritaires, la manière dont Linkaro doit vous accompagner et jusqu'où la plateforme doit aller.",
+          again: "Nouvelle réponse", switchTo: "EN", switchLabel: "Switch to English", sending: "Envoi…",
+        },
+        en: {
+          title: "Understanding creators' needs and building Linkaro with them",
+          lead: "Linkaro helps content creators grow and manage their collaborations with brands and businesses.",
+          intro: "Before defining the product, we want to understand your activity, the problems you actually face and how you would like to be supported. Questions adapt to your answers. There are no right or wrong answers. It takes 8 to 12 minutes.",
+          start: "Start", resume: "Resume", back: "Back", next: "Continue", send: "Send my answers",
+          sec: (i, n) => `Section ${i} of ${n}`, done: "Done",
+          free: "Open answer, optional", one: "One answer", many: "Several answers possible", upto: (n) => `Up to ${n} answers`,
+          other: "Other", precise: "Please specify", answer: "Your answer",
+          req: "Choose an answer to continue.", reqOther: "Please specify your “Other” answer.",
+          hashErr: "Could not generate an ID for this response. Check your connection and try again.",
+          thanks: "Thank you for your answers",
+          thanksLead: "This survey helps us build Linkaro from creators' real experience, not just assumptions.",
+          thanksMut: "Your answers will help us decide which features come first, how Linkaro should support you and how far the platform should go.",
+          again: "New response", switchTo: "FR", switchLabel: "Passer en français", sending: "Sending…",
+        },
+      };
+
+      const Q = {},
+        ORDER = [];
+      S.forEach((s) =>
+        s.q.forEach((x) => {
+          Q[x.id] = x;
+          ORDER.push(x.id);
+        }),
+      );
       const $ = (s) => document.querySelector(s),
-        app = $("#app"),
-        N = S.length;
+        app = $("#app");
       const esc = (s) =>
         String(s).replace(
           /[&<>"]/g,
@@ -752,123 +944,209 @@
         );
       const ld = (k, d) => {
         try {
-          const v = localStorage.getItem("lk_" + k);
+          const v = localStorage.getItem("lk2_" + k);
           return v ? JSON.parse(v) : d;
         } catch (e) {
           return d;
         }
       };
       let A = ld("a", {}),
-        step = Math.min(ld("s", -1), N - 1);
+        step = ld("s", -1),
+        L = ld("lang", (navigator.language || "fr").startsWith("en") ? "en" : "fr");
+      if (step >= S.length) step = -1;
       const sv = () => {
         try {
-          localStorage.setItem("lk_a", JSON.stringify(A));
-          localStorage.setItem("lk_s", JSON.stringify(step));
+          localStorage.setItem("lk2_a", JSON.stringify(A));
+          localStorage.setItem("lk2_s", JSON.stringify(step));
+          localStorage.setItem("lk2_lang", JSON.stringify(L));
         } catch (e) {}
       };
+      const tx = (obj) => (obj ? obj[L] || obj.fr : "");
+      const ui = () => UI[L];
       const box = (id) => document.querySelector(`.q[data-id="${id}"]`);
 
-      function qHTML(x) {
+      // --- Moteur de branchement -------------------------------------------
+      // Une réponse ne « compte » que si la question est visible compte tenu
+      // des réponses effectives qui la précèdent. Ainsi, changer une réponse
+      // en amont neutralise automatiquement toutes les réponses qui en dépendaient.
+      function optsOf(x, E) {
+        if (!x.from) {
+          const base = x.opts.slice();
+          if (x.other) base.push(o("autre", UI.fr.other, UI.en.other));
+          return base;
+        }
+        const p = Q[x.from],
+          sel = [].concat(E[x.from] || []);
+        return optsOf(p, E)
+          .filter((op) => sel.includes(op.v) && !op.ex)
+          .map((op) =>
+            op.v == "autre" && (A[x.from + "_autre"] || "").trim()
+              ? o("autre", A[x.from + "_autre"].trim(), A[x.from + "_autre"].trim())
+              : op,
+          );
+      }
+      function visibleQ(x, E) {
+        if (x.show && !x.show(E)) return false;
+        if (x.from && optsOf(x, E).length < 2) return false;
+        return true;
+      }
+      function clean(x, v, E) {
+        if (x.type == T) return typeof v == "string" && v.trim() ? v : undefined;
+        const ok = optsOf(x, E).map((op) => op.v);
+        if (x.type == U) return ok.includes(v) ? v : undefined;
+        const arr = [].concat(v || []).filter((i) => ok.includes(i));
+        return arr.length ? arr : undefined;
+      }
+      function effective() {
+        const E = {};
+        ORDER.forEach((id) => {
+          const x = Q[id];
+          if (!visibleQ(x, E)) return;
+          const v = clean(x, A[id], E);
+          if (v !== undefined) E[id] = v;
+        });
+        return E;
+      }
+      const secVisible = (i, E) => S[i].q.some((x) => visibleQ(x, E));
+      function nextSec(from, dir, E) {
+        for (let i = from + dir; i >= 0 && i < S.length; i += dir)
+          if (secVisible(i, E)) return i;
+        return dir > 0 ? S.length : -1;
+      }
+
+      // --- Rendu -----------------------------------------------------------
+      function qHTML(x, E) {
+        const u = ui();
         const hint =
-          x.type == T
-            ? "Réponse libre, facultative"
-            : x.type == U
-              ? "Une seule réponse"
-              : x.max
-                ? `Jusqu'à ${x.max} réponses`
-                : "Plusieurs réponses possibles";
+          x.type == T ? u.free : x.type == U ? u.one : x.max ? u.upto(x.max) : u.many;
         const kind = x.type == U ? "radio" : "checkbox",
           cls = x.type == U ? "o r" : "o";
         let b = "";
         if (x.type == T)
-          b = `<textarea rows="4" maxlength="800" placeholder="Votre réponse">${esc(A[x.id] || "")}</textarea>`;
+          b = x.short
+            ? `<input class="oth" type="text" maxlength="120" placeholder="${esc(u.answer)}" value="${esc(A[x.id] || "")}">`
+            : `<textarea rows="4" maxlength="800" placeholder="${esc(u.answer)}">${esc(A[x.id] || "")}</textarea>`;
         else {
-          const opts = x.opts
-            .map((o) => {
-              const ex = o[0] == "!",
-                l = ex ? o.slice(1) : o;
-              return `<label class="${cls}"><input type="${kind}" name="n${x.id}" value="${esc(l)}" data-ex="${ex ? 1 : 0}"><span>${esc(l)}</span></label>`;
+          const opts = optsOf(x, E)
+            .map((op) => {
+              const lab = op.v == "autre" && !x.from ? u.other : tx(op);
+              return `<label class="${cls}"><input type="${kind}" name="n${x.id}" value="${esc(op.v)}" data-ex="${op.ex ? 1 : 0}"><span>${esc(lab)}</span></label>`;
             })
             .join("");
           const oth = x.other
-            ? `<label class="${cls}"><input type="${kind}" name="n${x.id}" value="Autre" data-ex="0"><span>Autre</span></label><input class="oth" type="text" maxlength="150" placeholder="Précisez" value="${esc(A[x.id + "_autre"] || "")}" hidden>`
+            ? `<input class="oth" data-other="1" type="text" maxlength="150" placeholder="${esc(u.precise)}" value="${esc(A[x.id + "_autre"] || "")}" hidden>`
             : "";
           b = `<div class="opts">${opts}${oth}</div>`;
         }
-        return `<fieldset class="q" data-id="${x.id}"><legend>${esc(x.t)}</legend><p class="hint">${hint}</p>${x.quote ? `<blockquote class="quote">${esc(x.quote)}</blockquote>` : ""}${b}<p class="err" aria-live="polite"></p></fieldset>`;
+        const quote = x.quote ? `<blockquote class="quote">${esc(tx(x.quote))}</blockquote>` : "";
+        return `<fieldset class="q" data-id="${x.id}"><legend>${esc(x[L] || x.fr)}</legend><p class="hint">${hint}</p>${quote}${b}<p class="err" aria-live="polite"></p></fieldset>`;
       }
       function refresh(id) {
         const x = Q[id],
           bx = box(id);
         if (!bx || x.type == T) return;
         const v = [].concat(A[id] || []);
-        bx.querySelectorAll("input[type=radio],input[type=checkbox]").forEach(
-          (i) => {
-            i.checked = v.includes(i.value);
-            i.disabled = !!x.max && !i.checked && v.length >= x.max;
-          },
-        );
-        const o = bx.querySelector(".oth");
-        if (o) o.hidden = !v.includes("Autre");
-      }
-      function vis() {
-        S[step].q.forEach((x) => {
-          const b = box(x.id);
-          if (b) b.hidden = !!(x.show && !x.show(A));
+        bx.querySelectorAll("input[type=radio],input[type=checkbox]").forEach((i) => {
+          i.checked = v.includes(i.value);
+          i.disabled = !!x.max && !i.checked && v.length >= x.max;
         });
+        const ot = bx.querySelector("[data-other]");
+        if (ot) ot.hidden = !v.includes("autre");
       }
-      function head() {
+      // Met à jour la section affichée : visibilité, et options des questions
+      // dont la liste dépend d'une autre réponse (ex. « la plus importante »).
+      function sync() {
+        const E = effective();
+        S[step].q.forEach((x) => {
+          let b = box(x.id);
+          if (!b) return;
+          if (x.from) {
+            const sig = optsOf(x, E).map((op) => op.v + ":" + tx(op)).join("|");
+            if (b.dataset.sig != sig) {
+              b.outerHTML = qHTML(x, E);
+              b = box(x.id);
+              b.dataset.sig = sig;
+              refresh(x.id);
+            }
+          }
+          b.hidden = !visibleQ(x, E);
+        });
+        head(E);
+      }
+      function head(E) {
+        const u = ui();
+        E = E || effective();
+        const vis = S.map((_, i) => secVisible(i, E));
+        const total = vis.filter(Boolean).length,
+          pos = vis.slice(0, Math.max(step + 1, 0)).filter(Boolean).length;
         $("#pt").textContent =
-          step >= 0 && step < N
-            ? `Section ${step + 1} sur ${N}`
-            : step >= N
-              ? "Terminé"
-              : "";
+          step >= 0 && step < S.length ? u.sec(pos, total) : step >= S.length ? u.done : "";
         $("#pb").style.width =
-          (step < 0 ? 0 : (Math.min(step + 1, N) / N) * 100) + "%";
+          (step < 0 ? 0 : step >= S.length ? 100 : (pos / total) * 100) + "%";
+        const lb = $("#lang");
+        lb.textContent = u.switchTo;
+        lb.setAttribute("aria-label", u.switchLabel);
+        document.documentElement.lang = L;
       }
       function render() {
+        const u = ui();
         app.classList.remove("in");
         void app.offsetWidth;
         app.classList.add("in");
-        head();
         window.scrollTo(0, 0);
         if (step < 0) {
-          app.innerHTML = `<div class="rings"><i></i><i></i></div><h1>Comprendre les besoins des créateurs et construire Linkaro avec eux</h1><p class="lead">Linkaro aide les créateurs de contenu à mieux développer et gérer leurs collaborations avec les marques et entreprises.</p><p class="mut">Avant de définir le produit, nous voulons comprendre votre activité, les difficultés que vous rencontrez réellement et la manière dont vous aimeriez être accompagné. Il n'y a pas de bonne ou de mauvaise réponse. Comptez 8 à 10 minutes.</p><div class="nav"><button class="btn" id="go">${Object.keys(A).length ? "Reprendre" : "Commencer"}</button></div>`;
+          head();
+          app.innerHTML = `<div class="rings"><i></i><i></i></div><h1>${u.title}</h1><p class="lead">${u.lead}</p><p class="mut">${u.intro}</p><div class="nav"><button class="btn" id="go">${Object.keys(A).length ? u.resume : u.start}</button></div>`;
           $("#go").onclick = () => {
-            step = 0;
+            step = nextSec(-1, 1, effective());
             sv();
             render();
           };
           return;
         }
-        const s = S[step];
-        app.innerHTML = `${s.t ? `<h2>${s.t}</h2>` : ""}${s.intro ? `<p class="mut">${s.intro}</p>` : ""}${s.q.map(qHTML).join("")}<div class="nav"><button class="btn ghost" id="bk">Retour</button><button class="btn" id="nx">${step == N - 1 ? "Envoyer mes réponses" : "Continuer"}</button></div>`;
+        if (step >= S.length) return thanks();
+        if (!secVisible(step, effective())) {
+          step = nextSec(step, 1, effective());
+          if (step >= S.length) step = nextSec(S.length, -1, effective());
+        }
+        const s = S[step],
+          E = effective();
+        const isLast = nextSec(step, 1, E) >= S.length;
+        app.innerHTML = `<h2>${esc(tx(s))}</h2>${s.intro ? `<p class="mut">${esc(tx(s.intro))}</p>` : ""}${s.q.map((x) => qHTML(x, E)).join("")}<div class="nav"><button class="btn ghost" id="bk">${u.back}</button><button class="btn" id="nx">${isLast ? u.send : u.next}</button></div>`;
         s.q.forEach((x) => refresh(x.id));
-        vis();
+        sync();
         $("#bk").onclick = () => {
-          step--;
+          step = nextSec(step, -1, effective());
           sv();
           render();
         };
         $("#nx").onclick = () => {
           if (!check()) return;
-          if (step == N - 1) submit();
+          const n = nextSec(step, 1, effective());
+          if (n >= S.length) submit();
           else {
-            step++;
+            step = n;
             sv();
             render();
           }
         };
       }
+      $("#lang").onclick = () => {
+        L = L == "fr" ? "en" : "fr";
+        sv();
+        if (step >= S.length) thanks();
+        else render();
+      };
+
       app.addEventListener("input", (e) => {
         const t = e.target,
           bx = t.closest(".q");
         if (!bx) return;
         const id = bx.dataset.id;
-        if (t.tagName == "TEXTAREA") A[id] = t.value;
-        else if (t.classList.contains("oth")) A[id + "_autre"] = t.value;
+        if (t.dataset.other) A[id + "_autre"] = t.value;
+        else if (t.tagName == "TEXTAREA" || t.type == "text") A[id] = t.value;
         sv();
+        if (t.dataset.other && S[step].q.some((x) => x.from == id)) sync();
       });
       app.addEventListener("change", (e) => {
         const t = e.target,
@@ -876,41 +1154,43 @@
         if (!bx || t.type == "text") return;
         const id = bx.dataset.id,
           x = Q[id];
+        if (x.type == T) return;
         if (x.type == U) A[id] = t.value;
         else {
-          let v = [...bx.querySelectorAll("input[type=checkbox]:checked")].map(
-            (i) => i.value,
-          );
+          let v = [...bx.querySelectorAll("input[type=checkbox]:checked")].map((i) => i.value);
           if (t.checked && t.dataset.ex == "1") v = [t.value];
           else if (t.checked) {
-            const ex = x.opts.filter((o) => o[0] == "!").map((o) => o.slice(1));
+            const ex = optsOf(x, effective()).filter((op) => op.ex).map((op) => op.v);
             v = v.filter((i) => !ex.includes(i));
           }
           A[id] = v;
         }
         bx.querySelector(".err").textContent = "";
         refresh(id);
-        vis();
+        sync();
         sv();
-        const o = bx.querySelector(".oth");
-        if (o && !o.hidden && t.value == "Autre") o.focus();
+        const ot = bx.querySelector("[data-other]");
+        if (ot && !ot.hidden && t.value == "autre") ot.focus();
       });
       function check() {
+        const u = ui(),
+          E = effective();
         let bad = null;
         S[step].q.forEach((x) => {
           const b = box(x.id);
-          if (b.hidden || x.type == T) return;
-          const v = [].concat(A[x.id] || []);
+          if (!visibleQ(x, E) || x.type == T) return;
           let m = "";
-          if (!v.length) m = "Choisissez une réponse pour continuer.";
-          else if (v.includes("Autre") && !(A[x.id + "_autre"] || "").trim())
-            m = "Précisez votre réponse « Autre ».";
+          if (E[x.id] === undefined) m = u.req;
+          else if ([].concat(E[x.id]).includes("autre") && !x.from && !(A[x.id + "_autre"] || "").trim())
+            m = u.reqOther;
           b.querySelector(".err").textContent = m;
           if (m && !bad) bad = b;
         });
         if (bad) bad.scrollIntoView({ behavior: "smooth", block: "center" });
         return !bad;
       }
+
+      // --- Envoi -----------------------------------------------------------
       async function hashIpAndUserAgent() {
         if (!window.crypto?.subtle) throw new Error("Web Crypto indisponible");
         const response = await fetch("https://api.ipify.org?format=json");
@@ -923,59 +1203,86 @@
           byte.toString(16).padStart(2, "0"),
         ).join("");
       }
+      // Libellés envoyés en français pour une analyse homogène, codes en plus.
+      function labelFr(x, v, E) {
+        const op = optsOf(x, E).find((p) => p.v == v);
+        return op ? op.fr : v;
+      }
       async function submit() {
+        const nx = $("#nx");
+        if (nx) {
+          nx.disabled = true;
+          nx.textContent = ui().sending;
+        }
         let empreinte;
         try {
           empreinte = await hashIpAndUserAgent();
         } catch (e) {
-          alert(
-            "Impossible de générer l'identifiant de cette réponse. Vérifiez votre connexion puis réessayez.",
-          );
+          alert(ui().hashErr);
+          if (nx) {
+            nx.disabled = false;
+            nx.textContent = ui().send;
+          }
           return;
         }
         $("#empreinte-ip-ua").value = empreinte;
+        const E = effective();
         const out = {
+          version: VERSION,
+          langue: L,
           envoye_le: new Date().toISOString(),
-          empreinte_ip_ua_sha256: $("#empreinte-ip-ua").value,
+          empreinte_ip_ua_sha256: empreinte,
           reponses: {},
         };
-        S.forEach((s) =>
-          s.q.forEach((x) => {
-            if (x.show && !x.show(A)) return;
-            const v = A[x.id];
-            if (v == null || !v.length) return;
-            const r = { question: x.t, reponse: v };
-            if ([].concat(v).includes("Autre") && A[x.id + "_autre"])
-              r.autre = A[x.id + "_autre"].trim();
-            out.reponses[x.id] = r;
-          }),
-        );
+        ORDER.forEach((id) => {
+          const x = Q[id];
+          if (visibleQ(x, E)) {
+            const v = E[id];
+            if (v === undefined) return;
+            const r = { question: x.fr };
+            if (x.type == T) r.reponse = v.trim();
+            else {
+              r.code = v;
+              r.reponse = Array.isArray(v) ? v.map((i) => labelFr(x, i, E)) : labelFr(x, v, E);
+              if ([].concat(v).includes("autre") && (A[id + "_autre"] || "").trim() && !x.from)
+                r.autre = A[id + "_autre"].trim();
+            }
+            out.reponses[id] = r;
+          } else if (x.from && (!x.show || x.show(E))) {
+            // Une seule option possible : la réponse est déduite sans poser la question.
+            const only = optsOf(x, E);
+            if (only.length == 1)
+              out.reponses[id] = { question: x.fr, code: only[0].v, reponse: only[0].fr, deduit: true };
+          }
+        });
         if (ENDPOINT) {
           try {
             await fetch(ENDPOINT, {
               method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "Accept": "application/json",
-              },
+              headers: { "Content-Type": "application/json", Accept: "application/json" },
               body: JSON.stringify(out),
             });
           } catch (e) {}
         }
         try {
-          const all = JSON.parse(localStorage.getItem("lk_all") || "[]");
+          const all = JSON.parse(localStorage.getItem("lk2_all") || "[]");
           all.push(out);
-          localStorage.setItem("lk_all", JSON.stringify(all));
-          localStorage.removeItem("lk_a");
-          localStorage.removeItem("lk_s");
+          localStorage.setItem("lk2_all", JSON.stringify(all));
+          localStorage.removeItem("lk2_a");
+          localStorage.removeItem("lk2_s");
         } catch (e) {}
         A = {};
-        step = N;
+        step = S.length;
+        thanks();
+      }
+      function thanks() {
+        const u = ui();
         head();
         window.scrollTo(0, 0);
-        app.innerHTML = `<div class="rings"><i></i><i></i></div><h1>Merci pour vos réponses</h1><p class="lead">Ce questionnaire sert à construire Linkaro à partir de la réalité des créateurs, et non uniquement d'hypothèses.</p><p class="mut">Vos réponses nous aideront à définir les fonctionnalités prioritaires, la manière dont Linkaro doit vous accompagner et jusqu'où la plateforme doit aller.</p><div class="nav"><button class="btn ghost" id="nw">Nouvelle réponse</button></div>`;
+        app.innerHTML = `<div class="rings"><i></i><i></i></div><h1>${u.thanks}</h1><p class="lead">${u.thanksLead}</p><p class="mut">${u.thanksMut}</p><div class="nav"><button class="btn ghost" id="nw">${u.again}</button></div>`;
         $("#nw").onclick = () => {
           step = -1;
+          sv();
           render();
         };
       }
