@@ -1,4 +1,5 @@
 import { Button } from "@linkaro/ui/components/button"
+import Link from "next/link"
 
 export default function Page() {
   return (
@@ -8,8 +9,8 @@ export default function Page() {
         <p className="text-muted-foreground">
           Développez et gérez vos collaborations avec les marques.
         </p>
-        <Button className="w-fit" disabled>
-          Inscription bientôt disponible
+        <Button className="w-fit" asChild>
+          <Link href="/connexion">Commencer</Link>
         </Button>
       </div>
     </main>

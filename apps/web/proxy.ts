@@ -1,12 +1,25 @@
+import { env } from "@linkaro/env"
 import {
   buildContentSecurityPolicy,
+  CLIENT_IP_HEADER,
   createNonce,
   createRequestId,
+  getClientIp,
   REQUEST_ID_HEADER,
 } from "@linkaro/security"
 import { NextResponse, type NextRequest } from "next/server"
 
 import { logger } from "./lib/proxy-logger"
+
+// Photos de profil servies par les réseaux sociaux (affichées sur le profil du créateur).
+const SOCIAL_AVATAR_HOSTS = [
+  "https://lh3.googleusercontent.com",
+  "https://*.fbcdn.net",
+  "https://platform-lookaside.fbsbx.com",
+  "https://*.tiktokcdn.com",
+  "https://*.tiktokcdn-us.com",
+  "https://*.cdninstagram.com",
+]
 
 export function proxy(request: NextRequest) {
   const nonce = createNonce()
@@ -14,6 +27,7 @@ export function proxy(request: NextRequest) {
   const csp = buildContentSecurityPolicy({
     nonce,
     isDevelopment: process.env.NODE_ENV === "development",
+    imgSrc: SOCIAL_AVATAR_HOSTS,
   })
 
   // Next.js lit la CSP de la requête pour appliquer le nonce à ses propres scripts.
@@ -21,6 +35,14 @@ export function proxy(request: NextRequest) {
   requestHeaders.set("x-nonce", nonce)
   requestHeaders.set("Content-Security-Policy", csp)
   requestHeaders.set(REQUEST_ID_HEADER, requestId)
+  // IP réelle, calculée ici et transmise à l'app. La valeur éventuellement
+  // envoyée par le client est toujours supprimée.
+  const clientIp = getClientIp(
+    request.headers.get("x-forwarded-for"),
+    env.TRUSTED_PROXY_HOPS
+  )
+  if (clientIp) requestHeaders.set(CLIENT_IP_HEADER, clientIp)
+  else requestHeaders.delete(CLIENT_IP_HEADER)
 
   const response = NextResponse.next({ request: { headers: requestHeaders } })
   response.headers.set("Content-Security-Policy", csp)
@@ -35,14 +57,7 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    // Toutes les pages, sauf les fichiers statiques et les préchargements de liens.
-    {
-      source: "/((?!_next/static|_next/image|favicon.ico).*)",
-      missing: [
-        { type: "header", key: "next-router-prefetch" },
-        { type: "header", key: "purpose", value: "prefetch" },
-      ],
-    },
-  ],
+  // Toutes les requêtes sauf les fichiers statiques. Pas d'exception fondée sur un
+  // en-tête (ex. « prefetch ») : le client le contrôle et pourrait contourner le proxy.
+  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
 }

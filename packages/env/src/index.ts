@@ -34,9 +34,34 @@ export const env = createEnv({
       .enum(["trace", "debug", "info", "warn", "error", "fatal", "silent"])
       .default("info"),
     TRUSTED_PROXY_HOPS: z.coerce.number().int().min(0).max(5).default(0),
+
+    // Authentification des créateurs (Better Auth). Sert aussi à chiffrer les
+    // tokens OAuth en base : la changer rend les tokens existants illisibles.
+    CREATOR_AUTH_SECRET: z.string().min(32, "32 caractères minimum"),
+
+    // Réseaux sociaux : chaque fournisseur n'est activé que si ses clés sont présentes.
+    GOOGLE_CLIENT_ID: z.string().optional(),
+    GOOGLE_CLIENT_SECRET: z.string().optional(),
+    FACEBOOK_CLIENT_ID: z.string().optional(),
+    FACEBOOK_CLIENT_SECRET: z.string().optional(),
+    TIKTOK_CLIENT_KEY: z.string().optional(),
+    TIKTOK_CLIENT_SECRET: z.string().optional(),
+
+    // Fournisseur OAuth simulé (comptes fictifs), pour développer sans clés.
+    // Refusé en production.
+    ENABLE_DEV_OAUTH: z
+      .enum(["true", "false"])
+      .default("false")
+      .transform((value) => value === "true")
+      .refine((enabled) => !(enabled && isProduction), {
+        message: "Le fournisseur simulé est interdit en production",
+      }),
   },
   runtimeEnv: process.env,
   emptyStringAsUndefined: true,
-  // Permet `next build` et les tests sans .env complet (SKIP_ENV_VALIDATION=1).
-  skipValidation: !!process.env.SKIP_ENV_VALIDATION,
+  // Validation au démarrage du serveur, pas pendant `next build` (qui n'utilise
+  // aucune de ces valeurs). SKIP_ENV_VALIDATION=1 : CI sans .env complet.
+  skipValidation:
+    !!process.env.SKIP_ENV_VALIDATION ||
+    process.env.NEXT_PHASE === "phase-production-build",
 })

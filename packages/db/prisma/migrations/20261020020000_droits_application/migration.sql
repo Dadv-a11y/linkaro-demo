@@ -16,8 +16,11 @@ BEGIN
     ALTER DEFAULT PRIVILEGES IN SCHEMA public
       GRANT USAGE, SELECT ON SEQUENCES TO linkaro_app;
 
-    -- L'historique des migrations n'est pas l'affaire de l'application.
-    REVOKE ALL ON "_prisma_migrations" FROM linkaro_app;
+    -- L'historique des migrations n'est pas l'affaire de l'application
+    -- (table absente de la base temporaire utilisée par `prisma migrate dev`).
+    IF to_regclass('public._prisma_migrations') IS NOT NULL THEN
+      REVOKE ALL ON "_prisma_migrations" FROM linkaro_app;
+    END IF;
 
     -- Journaux : ajout seul (voir migration traceabilite).
     REVOKE UPDATE, DELETE, TRUNCATE ON "audit_log", "security_event" FROM linkaro_app;

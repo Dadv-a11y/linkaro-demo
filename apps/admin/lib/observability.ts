@@ -1,8 +1,7 @@
 import "server-only"
 
-import { env } from "@linkaro/env"
 import { createLogger, type RequestContext } from "@linkaro/observability"
-import { getClientIp, REQUEST_ID_HEADER } from "@linkaro/security"
+import { CLIENT_IP_HEADER, REQUEST_ID_HEADER } from "@linkaro/security"
 import { headers } from "next/headers"
 
 export const logger = createLogger({ app: "admin" })
@@ -15,7 +14,8 @@ export async function getRequestContext(): Promise<RequestContext> {
   const h = await headers()
   return {
     requestId: h.get(REQUEST_ID_HEADER),
-    ipAddress: getClientIp(h.get("x-forwarded-for"), env.TRUSTED_PROXY_HOPS),
+    // IP réelle calculée par proxy.ts (la valeur du client y est écrasée).
+    ipAddress: h.get(CLIENT_IP_HEADER),
     userAgent: h.get("user-agent"),
   }
 }

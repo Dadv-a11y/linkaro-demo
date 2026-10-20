@@ -1,5 +1,8 @@
 import { isIP } from "node:net"
 
+/** En-tête interne posé par notre proxy (jamais celui du client) : IP réelle du visiteur. */
+export const CLIENT_IP_HEADER = "x-linkaro-client-ip"
+
 /**
  * Détermine l'IP réelle du client à partir de X-Forwarded-For.
  *

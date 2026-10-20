@@ -1,0 +1,10 @@
+{
+  "extends": "@linkaro/typescript-config/base.json",
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "noEmit": true
+  },
+  "include": ["src", "scripts"],
+  "exclude": ["node_modules"]
+}

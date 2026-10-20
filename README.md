@@ -31,8 +31,9 @@ sudo -u postgres psql -v migrator_password="'linkaro_migrator_dev'" \
 # En développement, Prisma crée une base temporaire pour vérifier les migrations :
 sudo -u postgres psql -c "ALTER ROLE linkaro_migrator CREATEDB;"
 
-# 2. Configuration
+# 2. Configuration (puis renseigner le secret d'authentification)
 cp .env.example .env
+echo "CREATOR_AUTH_SECRET=$(openssl rand -base64 48)" >> .env
 
 # 3. Dépendances (génère aussi le client Prisma) et migrations
 pnpm install
@@ -42,6 +43,8 @@ pnpm db:deploy
 pnpm dev          # web + admin + worker
 pnpm dev:web      # uniquement l'app créateurs
 ```
+
+Se connecter sans clés de réseaux sociaux : avec `ENABLE_DEV_OAUTH=true` (déjà dans `.env.example`), la page <http://localhost:3000/connexion> propose « Continuer avec Compte de test », un fournisseur OAuth simulé qui propose des créateurs fictifs. Il est interdit en production.
 
 Vérifier que tout fonctionne : <http://localhost:3000/api/health> et <http://localhost:3001/api/health> doivent répondre `"status": "ok"`.
 

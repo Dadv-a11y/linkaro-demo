@@ -9,7 +9,7 @@
     "start": "PORT=3001 node --env-file-if-exists=../../.env .next/standalone/apps/admin/server.js",
     "lint": "eslint",
     "format": "prettier --write \"**/*.{ts,tsx}\"",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "next typegen && tsc --noEmit"
   },
   "dependencies": {
     "@linkaro/db": "workspace:*",
@@ -29,7 +29,7 @@
     "@linkaro/eslint-config": "workspace:*",
     "@linkaro/typescript-config": "workspace:*",
     "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
+    "@types/node": "^22.20.5",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^10",

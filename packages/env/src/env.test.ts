@@ -8,7 +8,10 @@ async function loadEnv(vars: Record<string, string>) {
   return (await import("./index")).env
 }
 
-const base = { DATABASE_URL: "postgresql://app:secret@localhost:5432/linkaro" }
+const base = {
+  DATABASE_URL: "postgresql://app:secret@localhost:5432/linkaro",
+  CREATOR_AUTH_SECRET: "x".repeat(32),
+}
 
 describe("validation de l'environnement", () => {
   afterEach(() => {
@@ -48,6 +51,24 @@ describe("validation de l'environnement", () => {
       WEB_URL: "http://localhost:3000",
     })
     expect(env.WEB_URL).toBe("http://localhost:3000")
+  })
+
+  it("interdit le fournisseur OAuth simulé en production", async () => {
+    await expect(
+      loadEnv({ ...base, NODE_ENV: "production", ENABLE_DEV_OAUTH: "true" })
+    ).rejects.toThrow()
+    const env = await loadEnv({
+      ...base,
+      NODE_ENV: "development",
+      ENABLE_DEV_OAUTH: "true",
+    })
+    expect(env.ENABLE_DEV_OAUTH).toBe(true)
+  })
+
+  it("refuse un secret d'authentification trop court", async () => {
+    await expect(
+      loadEnv({ ...base, CREATOR_AUTH_SECRET: "court" })
+    ).rejects.toThrow()
   })
 
   it("refuse une URL de base de données qui n'est pas PostgreSQL", async () => {

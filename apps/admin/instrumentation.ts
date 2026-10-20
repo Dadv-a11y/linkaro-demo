@@ -1,10 +1,9 @@
 import type { Instrumentation } from "next"
 
-/** Au démarrage du serveur : masquage des secrets sur toute la sortie console. */
+/** Au démarrage du serveur : masquage des secrets et validation de la configuration. */
 export async function register() {
-  if (process.env.NEXT_RUNTIME !== "nodejs") return
-  const { installConsoleRedaction } = await import("@linkaro/observability")
-  installConsoleRedaction()
+  if (process.env.NEXT_RUNTIME === "nodejs")
+    await import("./instrumentation.node")
 }
 
 /**

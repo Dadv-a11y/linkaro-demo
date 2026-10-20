@@ -89,3 +89,93 @@ model SecurityEvent {
   @@index([requestId])
   @@map("security_event")
 }
+
+// ─── Créateurs : comptes et authentification ──────────────────────────────────
+// Tables gérées par Better Auth (packages/auth). Pas de mot de passe : un créateur
+// s'inscrit en connectant un réseau social. Voir docs/architecture/03-acces-et-collecte-des-donnees.md.
+
+model Creator {
+  id               String           @id
+  name             String
+  /// E-mail du réseau, ou adresse factice non routable (…@comptes.linkaro.invalid)
+  /// pour les réseaux qui n'en fournissent pas.
+  email            String           @unique
+  emailVerified    Boolean          @default(false) @map("email_verified")
+  image            String?
+  /// active | suspended
+  status           String           @default("active")
+  /// Confirmation « J'ai 18 ans ou plus » (obligation légale).
+  adultConfirmedAt DateTime?        @map("adult_confirmed_at") @db.Timestamptz(3)
+  termsAcceptedAt  DateTime?        @map("terms_accepted_at") @db.Timestamptz(3)
+  termsVersion     String?          @map("terms_version")
+  createdAt        DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime         @updatedAt @map("updated_at") @db.Timestamptz(3)
+  sessions         CreatorSession[]
+  accounts         CreatorAccount[]
+
+  @@map("creator")
+}
+
+model CreatorSession {
+  id        String   @id
+  /// Jeton de session (cookie httpOnly).
+  token     String   @unique
+  expiresAt DateTime @map("expires_at") @db.Timestamptz(3)
+  ipAddress String?  @map("ip_address")
+  userAgent String?  @map("user_agent")
+  userId    String   @map("creator_id")
+  creator   Creator  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@index([userId])
+  @@map("creator_session")
+}
+
+/// Réseau social connecté. Les tokens sont chiffrés par Better Auth (encryptOAuthTokens).
+model CreatorAccount {
+  id                    String    @id
+  /// Identifiant du compte chez le réseau (open_id TikTok, sub Google…).
+  accountId             String    @map("account_id")
+  /// google | facebook | tiktok | linkaro-dev…
+  providerId            String    @map("provider_id")
+  userId                String    @map("creator_id")
+  creator               Creator   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?   @map("access_token")
+  refreshToken          String?   @map("refresh_token")
+  idToken               String?   @map("id_token")
+  accessTokenExpiresAt  DateTime? @map("access_token_expires_at") @db.Timestamptz(3)
+  refreshTokenExpiresAt DateTime? @map("refresh_token_expires_at") @db.Timestamptz(3)
+  scope                 String?
+  /// Imposé par Better Auth ; jamais utilisé (aucun mot de passe chez Linkaro).
+  password              String?
+  createdAt             DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt             DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@unique([providerId, accountId])
+  @@index([userId])
+  @@map("creator_account")
+}
+
+/// Valeurs temporaires de Better Auth (state OAuth…).
+model CreatorVerification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime @map("expires_at") @db.Timestamptz(3)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@index([identifier])
+  @@map("creator_verification")
+}
+
+/// Compteurs de limitation de débit (anti-force brute, anti-abus).
+model AuthRateLimit {
+  id          String @id
+  key         String @unique
+  count       Int
+  lastRequest BigInt @map("last_request")
+
+  @@map("auth_rate_limit")
+}

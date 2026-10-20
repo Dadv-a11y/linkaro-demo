@@ -207,3 +207,25 @@ Les risques décrits au §3.1 restent valables. Avant tout développement de l'e
 4. **Moindre privilège.** L'extension n'a accès qu'aux pages de statistiques concernées. Elle ne lit **jamais les cookies ni les sessions** et n'envoie que les chiffres extraits, pas le HTML complet.
 5. **Ordinateur d'abord.** Sur mobile, seul Firefox pour Android accepte les extensions. L'import par capture reste la solution mobile.
 6. Les chiffres ainsi obtenus portent un niveau de confiance distinct (« Extension du JJ/MM »), au même titre que les captures.
+
+### 6.2 Propriété des comptes et vérification d'identité (ajout du 20 octobre 2026)
+
+**Propriété d'un réseau.**
+- **Réseau connecté par OAuth** : c'est une preuve forte. On ne peut autoriser Linkaro sur un compte qu'en y étant connecté. Ces réseaux portent le badge `Vérifié`.
+- **Réseau déclaré** (lien collé, phase ultérieure) : ce n'est pas une preuve. La vérification se fera par **code de contrôle**, placé temporairement dans la bio du compte ou envoyé depuis ce compte. En attendant, le badge reste `Déclaré`.
+
+**Identité de la personne (CNI ou autre pièce).** C'est une donnée hautement sensible au sens de la loi n° 2024/017. Elle sera demandée **uniquement quand elle devient nécessaire**, pas à l'inscription :
+- avant un paiement passant par Linkaro ;
+- avant la signature d'un contrat via Linkaro ;
+- pour obtenir un badge « identité vérifiée » visible des marques.
+
+Principes :
+- consentement explicite au moment de la demande ;
+- demande par le canal choisi par le créateur (WhatsApp, SMS ou e-mail) ;
+- recours possible à un prestataire spécialisé (KYC) ;
+- **seul le résultat de la vérification est conservé** (vérifié ou non, date, méthode), pas la pièce ;
+- comparaison du nom de la pièce avec les noms des comptes connectés.
+
+À cadrer avec un juriste avant la mise en place.
+
+**E-mails.** Envoi par **Nodemailer** via un serveur **SMTP**, décision du porteur de projet. Ils servent aux liens magiques de l'équipe, puis aux notifications. En développement, les e-mails s'affichent dans les journaux.

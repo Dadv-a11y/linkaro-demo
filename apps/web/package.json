@@ -9,27 +9,30 @@
     "start": "PORT=3000 node --env-file-if-exists=../../.env .next/standalone/apps/web/server.js",
     "lint": "eslint",
     "format": "prettier --write \"**/*.{ts,tsx}\"",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "next typegen && tsc --noEmit"
   },
   "dependencies": {
+    "@linkaro/auth": "workspace:*",
     "@linkaro/db": "workspace:*",
     "@linkaro/env": "workspace:*",
     "@linkaro/observability": "workspace:*",
     "@linkaro/security": "workspace:*",
     "@linkaro/ui": "workspace:*",
     "@next/env": "16.4.2",
+    "better-auth": "1.7.12",
     "lucide-react": "^1.59.0",
     "next": "16.4.2",
     "next-themes": "^0.4.6",
     "react": "19.3.1",
     "react-dom": "19.3.1",
-    "server-only": "^0.0.1"
+    "server-only": "^0.0.1",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@linkaro/eslint-config": "workspace:*",
     "@linkaro/typescript-config": "workspace:*",
     "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
+    "@types/node": "^22.20.5",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^10",
