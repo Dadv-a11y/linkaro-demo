@@ -9,3 +9,83 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+// ─── Traçabilité ──────────────────────────────────────────────────────────────
+// Voir docs/architecture/02-securite-et-conformite.md.
+
+enum ActorType {
+  USER // créateur ou marque connecté
+  ADMIN // membre de l'équipe Linkaro
+  SYSTEM // tâche automatique (worker, purge…)
+  ANONYMOUS // visiteur non connecté (tentative de connexion…)
+}
+
+enum AuditResult {
+  SUCCESS
+  FAILURE
+  DENIED // refusé par une règle d'autorisation
+}
+
+enum SecuritySeverity {
+  INFO
+  WARNING
+  CRITICAL
+}
+
+/// Journal d'audit : qui a fait quoi, quand, d'où, et ce qui a changé.
+/// En ajout seul : l'application ne peut ni modifier ni supprimer une ligne
+/// (droits SQL + déclencheur), et chaque ligne contient l'empreinte de la
+/// précédente (chaînage), ce qui rend toute altération détectable.
+model AuditLog {
+  id         BigInt      @id @default(autoincrement())
+  createdAt  DateTime    @map("created_at") @db.Timestamptz(3)
+  actorType  ActorType   @map("actor_type")
+  actorId    String?     @map("actor_id")
+  actorRole  String?     @map("actor_role")
+  /// Action au format domaine.verbe, par exemple « auth.login » ou « social.connect ».
+  action     String
+  targetType String?     @map("target_type")
+  targetId   String?     @map("target_id")
+  result     AuditResult
+  /// Motif saisi pour une action d'administration, ou cause d'un échec.
+  reason     String?
+  /// Valeurs avant / après, déjà expurgées des données secrètes.
+  changes    Json?
+  metadata   Json?
+  requestId  String?     @map("request_id")
+  ipAddress  String?     @map("ip_address")
+  userAgent  String?     @map("user_agent")
+  prevHash   String      @map("prev_hash")
+  hash       String      @unique
+
+  @@index([createdAt])
+  @@index([actorId, createdAt])
+  @@index([action, createdAt])
+  @@index([targetType, targetId])
+  @@index([requestId])
+  @@index([ipAddress, createdAt])
+  @@map("audit_log")
+}
+
+/// Événements de sécurité : connexions, échecs, blocages, accès refusés.
+model SecurityEvent {
+  id         BigInt           @id @default(autoincrement())
+  createdAt  DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  /// Type au format domaine.événement, par exemple « auth.login_failed ».
+  type       String
+  severity   SecuritySeverity
+  userId     String?          @map("user_id")
+  /// Identifiant de connexion tenté, toujours masqué (ex. +237 6•• •• •• 12).
+  identifier String?
+  ipAddress  String?          @map("ip_address")
+  userAgent  String?          @map("user_agent")
+  requestId  String?          @map("request_id")
+  details    Json?
+
+  @@index([createdAt])
+  @@index([type, createdAt])
+  @@index([userId, createdAt])
+  @@index([ipAddress, createdAt])
+  @@index([requestId])
+  @@map("security_event")
+}

@@ -6,6 +6,8 @@ import {
 } from "@linkaro/security"
 import { NextResponse, type NextRequest } from "next/server"
 
+import { logger } from "./lib/proxy-logger"
+
 export function proxy(request: NextRequest) {
   const nonce = createNonce()
   const requestId = createRequestId()
@@ -23,6 +25,12 @@ export function proxy(request: NextRequest) {
   const response = NextResponse.next({ request: { headers: requestHeaders } })
   response.headers.set("Content-Security-Policy", csp)
   response.headers.set(REQUEST_ID_HEADER, requestId)
+
+  // Journal d'accès : chemin sans query string (codes OAuth, tokens…).
+  logger.info(
+    { requestId, method: request.method, path: request.nextUrl.pathname },
+    "requête"
+  )
   return response
 }
 

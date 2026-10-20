@@ -2,6 +2,15 @@
   "$schema": "https://turborepo.com/schema.json",
   "ui": "stream",
   "globalDependencies": [".env"],
+  "globalPassThroughEnv": [
+    "SKIP_ENV_VALIDATION",
+    "DATABASE_URL",
+    "DATABASE_MIGRATION_URL",
+    "WEB_URL",
+    "ADMIN_URL",
+    "LOG_LEVEL",
+    "TRUSTED_PROXY_HOPS"
+  ],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],

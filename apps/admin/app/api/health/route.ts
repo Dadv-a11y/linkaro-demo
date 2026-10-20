@@ -1,5 +1,7 @@
 import { prisma } from "@linkaro/db"
 
+import { logger } from "@/lib/observability"
+
 // Toujours exécutée à la demande : l'état de la base ne doit pas être mis en cache.
 export const dynamic = "force-dynamic"
 
@@ -14,7 +16,7 @@ export async function GET() {
       durationMs: Date.now() - startedAt,
     })
   } catch (error) {
-    console.error("[health] base de données injoignable", error)
+    logger.error({ err: error }, "Base de données injoignable")
     return Response.json(
       { status: "degraded", app: "admin", database: "unreachable" },
       { status: 503 }

@@ -13,6 +13,7 @@ export default defineConfig({
   datasource: {
     // Facultatif pour `prisma generate` (CI, installation sans .env) ;
     // les migrations échouent explicitement si l'URL est absente.
-    url: process.env.DATABASE_URL ?? "",
+    // Les migrations utilisent le rôle propriétaire ; l'application, le rôle restreint.
+    url: process.env.DATABASE_MIGRATION_URL ?? process.env.DATABASE_URL ?? "",
   },
 })

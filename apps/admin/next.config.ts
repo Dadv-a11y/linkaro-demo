@@ -23,8 +23,9 @@ const nextConfig: NextConfig = {
     "@linkaro/db",
     "@linkaro/env",
     "@linkaro/security",
+    "@linkaro/observability",
   ],
-  serverExternalPackages: ["pg"],
+  serverExternalPackages: ["pg", "pino", "pino-pretty", "thread-stream"],
   poweredByHeader: false,
   async headers() {
     return [

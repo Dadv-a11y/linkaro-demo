@@ -8,11 +8,13 @@
     "build": "tsup",
     "start": "node --env-file-if-exists=../../.env dist/index.js",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint"
+    "lint": "eslint",
+    "journal:verify": "tsx --env-file-if-exists=../../.env src/cli/verify-journal.ts"
   },
   "dependencies": {
     "@linkaro/db": "workspace:*",
-    "@linkaro/env": "workspace:*"
+    "@linkaro/env": "workspace:*",
+    "@linkaro/observability": "workspace:*"
   },
   "devDependencies": {
     "@linkaro/eslint-config": "workspace:*",

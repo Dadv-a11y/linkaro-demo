@@ -95,12 +95,21 @@ Les règles de code qui en découlent sont résumées dans `AGENTS.md` et vérif
 | **Mises à jour automatiques** | Dependabot propose chaque semaine les mises à jour de sécurité | `.github/dependabot.yml` |
 | **Vulnérabilités acceptées documentées** | Exception justifiée et datée, revue à chaque mise à jour (aujourd'hui : un outil de lint, jamais livré) | `pnpm-workspace.yaml` |
 | **CI à droits minimaux** | Le workflow n'a que la lecture du dépôt | `permissions: contents: read` |
+| **Rôles PostgreSQL séparés** | `linkaro_migrator` (propriétaire, migrations uniquement) et `linkaro_app` (web, admin, worker : lecture/écriture des données, aucune création ni modification de table) | `packages/db/scripts/setup-roles.sql` |
+| **Journal d'audit infalsifiable** | Ajout seul : le rôle applicatif n'a pas les droits UPDATE, DELETE ni TRUNCATE. Un déclencheur bloque toute modification et toute suppression de moins de 12 mois, **même pour le propriétaire**. Chaque ligne contient l'empreinte SHA-256 de la précédente. Écritures concurrentes sérialisées par un verrou | `packages/db` (migration `traceabilite`), `packages/observability/src/audit.ts` |
+| **Vérification d'intégrité** | Le worker vérifie la chaîne à chaque démarrage. En cas de rupture : journal `fatal` et événement de sécurité `CRITICAL`. Vérification manuelle : `pnpm journal:verify` (code de sortie 1 si altéré) | `apps/worker` |
+| **Purge encadrée** | Seule la fonction `linkaro_purge_expired_journals()` peut supprimer, et uniquement les lignes de plus de 12 mois | migration `traceabilite` |
+| **Journal des événements de sécurité** | Table protégée de la même façon. Identifiant de connexion toujours masqué | `recordSecurityEvent()` |
+| **Journaux techniques masqués** | Pino en JSON : chemins sensibles masqués, et toute clé sensible, même imbriquée, nettoyée (téléphones et e-mails partiellement). Secrets écrits en clair dans les messages (`password=…`, `?code=…`) masqués, y compris dans la sortie console de Next.js | `packages/observability` |
+| **Journal d'accès sans paramètres** | Chaque requête est journalisée avec son identifiant, sa méthode et son chemin, **sans la query string** (codes OAuth, tokens) | `apps/*/proxy.ts` |
+| **Capture centralisée des erreurs** | Toute erreur serveur non gérée (page, API, Server Action, proxy) est journalisée avec l'identifiant de requête | `apps/*/instrumentation.ts` |
+| **IP réelle fiable** | `X-Forwarded-For` n'est lu que pour le nombre de proxys de confiance déclaré (`TRUSTED_PROXY_HOPS`). Une IP injectée par le client est ignorée | `getClientIp()` |
 
 ### 4.2 Prévues, étape par étape
 
 | Étape | Mesures |
 |---|---|
-| **2. Journaux et audit** | Logger Pino avec **masquage automatique** (tokens, mots de passe, téléphones, e-mails). Table d'audit **en ajout seul** : l'utilisateur SQL de l'app ne peut ni modifier ni supprimer, et chaque ligne contient l'empreinte de la précédente. Journal des événements de sécurité. **Rôles PostgreSQL séparés** : un rôle de migration et un rôle applicatif sans droits de modification du schéma |
+| **2. Journaux et audit** | ✅ Fait (voir §4.1). Reste : consultation dans le dashboard technique (étape admin) et purge planifiée par le worker (pg-boss) |
 | **3. Authentification** | Better Auth : sessions en cookies `httpOnly`, `Secure`, `SameSite=Lax`, rotation de session, protection CSRF. **Limitation de débit** sur la connexion et l'envoi de codes (anti-force brute et anti-abus de SMS). Codes OTP à usage unique, valables 10 min, 5 essais maximum. **Double authentification obligatoire pour l'admin**. Contrôle d'âge (18 ans et plus). Consentements horodatés |
 | **4. Connexion des réseaux** | Flux OAuth avec `state` et **PKCE**. Tokens **chiffrés** (AES-256-GCM, clé hors base). Lecture seule, avec le **minimum de permissions**. Révocation = effacement. Réponses des API externes **validées par Zod**. Délais d'expiration et réessais bornés |
 | **Toutes les étapes** | Toute entrée validée par Zod. Autorisation vérifiée **côté serveur** à chaque action (un créateur n'accède qu'à ses données). Requêtes via Prisma (pas de SQL concaténé). Tests automatiques des règles d'accès |

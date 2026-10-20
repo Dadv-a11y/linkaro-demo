@@ -13,10 +13,11 @@
     "typecheck": "turbo typecheck",
     "test": "turbo test",
     "db:generate": "pnpm --filter @linkaro/db db:generate",
-    "db:migrate": "pnpm --filter @linkaro/db db:migrate",
+    "db:migrate": "pnpm --filter @linkaro/db db:migrate && pnpm db:generate",
     "db:deploy": "pnpm --filter @linkaro/db db:deploy",
     "db:studio": "pnpm --filter @linkaro/db db:studio",
-    "audit:deps": "pnpm audit --audit-level=high"
+    "audit:deps": "pnpm audit --audit-level=high",
+    "journal:verify": "pnpm --filter worker journal:verify"
   },
   "devDependencies": {
     "@linkaro/eslint-config": "workspace:*",

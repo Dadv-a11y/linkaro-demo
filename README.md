@@ -24,15 +24,19 @@ Plateforme qui aide les créateurs de contenu africains à développer et gérer
 Prérequis : Node.js 22, pnpm 10, PostgreSQL 16+.
 
 ```bash
-# 1. Base de données locale
-sudo -u postgres psql -c "CREATE ROLE linkaro LOGIN PASSWORD 'linkaro_dev' CREATEDB;"
-sudo -u postgres psql -c "CREATE DATABASE linkaro_dev OWNER linkaro;"
+# 1. Base de données locale : deux rôles (migrations / application)
+sudo -u postgres psql -v migrator_password="'linkaro_migrator_dev'" \
+  -v app_password="'linkaro_app_dev'" -v database=linkaro_dev \
+  -f packages/db/scripts/setup-roles.sql
+# En développement, Prisma crée une base temporaire pour vérifier les migrations :
+sudo -u postgres psql -c "ALTER ROLE linkaro_migrator CREATEDB;"
 
 # 2. Configuration
 cp .env.example .env
 
-# 3. Dépendances (génère aussi le client Prisma)
+# 3. Dépendances (génère aussi le client Prisma) et migrations
 pnpm install
+pnpm db:deploy
 
 # 4. Lancer les applications
 pnpm dev          # web + admin + worker
