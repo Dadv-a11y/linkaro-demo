@@ -7,14 +7,19 @@ import { z } from "zod"
  * fait échouer le démarrage avec un message explicite, plutôt qu'une panne
  * silencieuse plus tard.
  */
+const isProduction = process.env.NODE_ENV === "production"
+
+// En production, les URLs publiques doivent être en HTTPS.
+const publicUrl = isProduction ? z.url({ protocol: /^https$/ }) : z.url()
+
 export const env = createEnv({
   server: {
     NODE_ENV: z
       .enum(["development", "test", "production"])
       .default("development"),
     DATABASE_URL: z.url({ protocol: /^postgres(ql)?$/ }),
-    WEB_URL: z.url().default("http://localhost:3000"),
-    ADMIN_URL: z.url().default("http://localhost:3001"),
+    WEB_URL: publicUrl.default("http://localhost:3000"),
+    ADMIN_URL: publicUrl.default("http://localhost:3001"),
     LOG_LEVEL: z
       .enum(["trace", "debug", "info", "warn", "error", "fatal", "silent"])
       .default("info"),

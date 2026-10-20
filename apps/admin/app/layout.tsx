@@ -4,6 +4,7 @@ import "@linkaro/ui/globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { cn } from "@linkaro/ui/lib/utils"
 import type { Metadata } from "next"
+import { headers } from "next/headers"
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" })
 
@@ -17,11 +18,14 @@ const fontMono = Geist_Mono({
   variable: "--font-mono",
 })
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  // Nonce de la CSP, posé par proxy.ts : requis par le script de thème en ligne.
+  const nonce = (await headers()).get("x-nonce") ?? undefined
+
   return (
     <html
       lang="fr"
@@ -34,7 +38,7 @@ export default function RootLayout({
       )}
     >
       <body>
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider nonce={nonce}>{children}</ThemeProvider>
       </body>
     </html>
   )

@@ -15,7 +15,8 @@
     "db:generate": "pnpm --filter @linkaro/db db:generate",
     "db:migrate": "pnpm --filter @linkaro/db db:migrate",
     "db:deploy": "pnpm --filter @linkaro/db db:deploy",
-    "db:studio": "pnpm --filter @linkaro/db db:studio"
+    "db:studio": "pnpm --filter @linkaro/db db:studio",
+    "audit:deps": "pnpm audit --audit-level=high"
   },
   "devDependencies": {
     "@linkaro/eslint-config": "workspace:*",

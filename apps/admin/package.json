@@ -14,6 +14,7 @@
   "dependencies": {
     "@linkaro/db": "workspace:*",
     "@linkaro/env": "workspace:*",
+    "@linkaro/security": "workspace:*",
     "@linkaro/ui": "workspace:*",
     "@next/env": "16.4.2",
     "lucide-react": "^1.59.0",

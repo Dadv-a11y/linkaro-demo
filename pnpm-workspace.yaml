@@ -8,3 +8,10 @@ onlyBuiltDependencies:
   - "esbuild"
   - "sharp"
   - "unrs-resolver"
+
+# Vulnérabilités acceptées après analyse (à revoir à chaque mise à jour).
+auditConfig:
+  ignoreGhsas:
+    # braces <=3.0.3 (ReDoS) : uniquement via @next/eslint-plugin-next (outil de lint,
+    # jamais livré en production, motifs de fichiers maîtrisés). Aucun correctif publié.
+    - GHSA-vfj7-8cjw-p6xm

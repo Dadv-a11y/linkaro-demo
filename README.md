@@ -4,6 +4,7 @@ Plateforme qui aide les créateurs de contenu africains à développer et gérer
 
 - Recherche et cadrage : [`docs/recherche/`](docs/recherche/README.md)
 - Architecture et stack : [`docs/architecture/01-stack-technique.md`](docs/architecture/01-stack-technique.md)
+- Sécurité et conformité (loi n° 2024/017) : [`docs/architecture/02-securite-et-conformite.md`](docs/architecture/02-securite-et-conformite.md), signalement des failles : [`SECURITY.md`](SECURITY.md)
 - Questionnaire de cadrage : `Linkaro _ questionnaire de cadrage.html` ([carte des branchements](docs/questionnaire-branches.md))
 
 ## Structure

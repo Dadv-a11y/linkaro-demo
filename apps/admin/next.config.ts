@@ -1,5 +1,6 @@
 import path from "node:path"
 import { loadEnvConfig } from "@next/env"
+import { securityHeaders } from "@linkaro/security"
 import type { NextConfig } from "next"
 
 const monorepoRoot = path.resolve(import.meta.dirname, "../..")
@@ -17,9 +18,25 @@ const nextConfig: NextConfig = {
   // Build autonome, copié tel quel sur le VPS (voir docs/architecture).
   output: "standalone",
   outputFileTracingRoot: monorepoRoot,
-  transpilePackages: ["@linkaro/ui", "@linkaro/db", "@linkaro/env"],
+  transpilePackages: [
+    "@linkaro/ui",
+    "@linkaro/db",
+    "@linkaro/env",
+    "@linkaro/security",
+  ],
   serverExternalPackages: ["pg"],
   poweredByHeader: false,
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: securityHeaders({
+          isProduction: process.env.NODE_ENV === "production",
+          noIndex: true,
+        }),
+      },
+    ]
+  },
 }
 
 export default nextConfig

@@ -1,6 +1,6 @@
 # 01 — Stack technique de Linkaro (proposition à valider)
 
-> **Statut :** proposition, octobre 2026. Les versions indiquées sont les dernières versions **stables** publiées sur npm à cette date.
+> **Statut :** validée, octobre 2026. Sécurité et conformité : voir [02-securite-et-conformite.md](02-securite-et-conformite.md). Les versions indiquées sont les dernières versions **stables** publiées sur npm à cette date.
 > **Décisions déjà prises par le porteur de projet :**
 > - Next.js, PostgreSQL et Prisma ;
 > - Zod pour la validation et Pino pour les journaux ;
