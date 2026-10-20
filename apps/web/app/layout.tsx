@@ -1,4 +1,4 @@
-import { Geist, Geist_Mono } from "next/font/google"
+import { Geist_Mono, Inter } from "next/font/google"
 
 import "@linkaro/ui/globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
@@ -6,7 +6,8 @@ import { cn } from "@linkaro/ui/lib/utils"
 import type { Metadata } from "next"
 import { headers } from "next/headers"
 
-const geist = Geist({ subsets: ["latin"], variable: "--font-sans" })
+// Police de la charte Linkaro (site vitrine).
+const inter = Inter({ subsets: ["latin"], variable: "--font-sans" })
 
 export const metadata: Metadata = {
   title: "Linkaro",
@@ -34,7 +35,7 @@ export default async function RootLayout({
         "antialiased",
         fontMono.variable,
         "font-sans",
-        geist.variable
+        inter.variable
       )}
     >
       <body>

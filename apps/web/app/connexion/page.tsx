@@ -11,6 +11,7 @@ import {
 import Link from "next/link"
 import { redirect } from "next/navigation"
 
+import { AuthShell } from "@/components/auth-shell"
 import { SignInButtons } from "@/components/sign-in-buttons"
 import { getCreatorSession } from "@/lib/auth"
 
@@ -32,10 +33,10 @@ export default async function SignInPage({
   const providers = enabledSignInProviders()
 
   return (
-    <main className="flex min-h-svh items-center justify-center p-4">
-      <Card className="w-full max-w-sm">
+    <AuthShell>
+      <Card className="w-full max-w-sm shadow-lg">
         <CardHeader>
-          <CardTitle className="text-2xl">Bienvenue sur Linkaro</CardTitle>
+          <CardTitle className="text-2xl">Bienvenue !</CardTitle>
           <CardDescription>
             Pas de mot de passe : connecte le réseau où tu publies le plus. Ton
             profil se remplit tout seul.
@@ -59,17 +60,17 @@ export default async function SignInPage({
           <p>
             En continuant, tu autorises Linkaro à lire ton profil et tes
             statistiques publiques, en lecture seule. Voir les{" "}
-            <Link href="/conditions" className="underline">
+            <Link href="/conditions" className="text-primary underline">
               conditions
             </Link>{" "}
             et la{" "}
-            <Link href="/confidentialite" className="underline">
+            <Link href="/confidentialite" className="text-primary underline">
               politique de confidentialité
             </Link>
             .
           </p>
         </CardFooter>
       </Card>
-    </main>
+    </AuthShell>
   )
 }

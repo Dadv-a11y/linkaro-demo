@@ -8,7 +8,7 @@ import {
 import { betterAuth, type BetterAuthOptions } from "better-auth"
 import { prismaAdapter } from "better-auth/adapters/prisma"
 import { nextCookies } from "better-auth/next-js"
-import { genericOAuth } from "better-auth/plugins"
+import { genericOAuth, type GenericOAuthConfig } from "better-auth/plugins"
 
 import {
   DEV_OAUTH_CLIENT_ID,
@@ -16,6 +16,7 @@ import {
   DEV_OAUTH_PROVIDER_ID,
   placeholderEmail,
 } from "./dev-oauth"
+import { INSTAGRAM_PROVIDER_ID, instagramProvider } from "./instagram"
 import {
   CLIENT_IP_HEADER,
   contextFromEndpoint,
@@ -64,28 +65,39 @@ function socialProviders(): BetterAuthOptions["socialProviders"] {
   return providers
 }
 
-function devOAuthPlugin() {
-  return genericOAuth({
-    config: [
-      {
-        providerId: DEV_OAUTH_PROVIDER_ID,
-        clientId: DEV_OAUTH_CLIENT_ID,
-        clientSecret: DEV_OAUTH_CLIENT_SECRET,
-        authorizationUrl: `${env.WEB_URL}/dev-oauth/autoriser`,
-        tokenUrl: `${env.WEB_URL}/api/dev-oauth/token`,
-        userInfoUrl: `${env.WEB_URL}/api/dev-oauth/userinfo`,
-        scopes: ["profile"],
-        pkce: true,
-        // Identifiant stable du compte chez le fournisseur (champ OpenID « sub »).
-        accountSubject: ({ profile }) => String(profile.sub),
-        mapProfileToUser: (profile) => ({
-          name: String(profile.name ?? ""),
-          email: placeholderEmail(DEV_OAUTH_PROVIDER_ID, String(profile.sub)),
-          emailVerified: false,
-        }),
-      },
-    ],
-  })
+function devOAuthConfig() {
+  return {
+    providerId: DEV_OAUTH_PROVIDER_ID,
+    clientId: DEV_OAUTH_CLIENT_ID,
+    clientSecret: DEV_OAUTH_CLIENT_SECRET,
+    authorizationUrl: `${env.WEB_URL}/dev-oauth/autoriser`,
+    tokenUrl: `${env.WEB_URL}/api/dev-oauth/token`,
+    userInfoUrl: `${env.WEB_URL}/api/dev-oauth/userinfo`,
+    scopes: ["profile"],
+    pkce: true,
+    // Identifiant stable du compte chez le fournisseur (champ OpenID « sub »).
+    accountSubject: ({ profile }) => String(profile.sub),
+    mapProfileToUser: (profile: Record<string, unknown>) => ({
+      name: String(profile.name ?? ""),
+      email: placeholderEmail(DEV_OAUTH_PROVIDER_ID, String(profile.sub)),
+      emailVerified: false,
+    }),
+  } satisfies GenericOAuthConfig
+}
+
+/** Fournisseurs passant par le module OAuth générique (Instagram, fournisseur simulé). */
+function genericProviders(): GenericOAuthConfig[] {
+  const providers: GenericOAuthConfig[] = []
+  if (env.INSTAGRAM_CLIENT_ID && env.INSTAGRAM_CLIENT_SECRET) {
+    providers.push(
+      instagramProvider({
+        clientId: env.INSTAGRAM_CLIENT_ID,
+        clientSecret: env.INSTAGRAM_CLIENT_SECRET,
+      })
+    )
+  }
+  if (env.ENABLE_DEV_OAUTH) providers.push(devOAuthConfig())
+  return providers
 }
 
 function createCreatorAuth() {
@@ -232,7 +244,9 @@ function createCreatorAuth() {
     },
 
     plugins: [
-      ...(env.ENABLE_DEV_OAUTH ? [devOAuthPlugin()] : []),
+      ...(genericProviders().length > 0
+        ? [genericOAuth({ config: genericProviders() })]
+        : []),
       nextCookies(), // toujours en dernier
     ],
   })
@@ -253,6 +267,8 @@ export { contextFromHeaders }
 export type SignInProvider = {
   id: string
   label: string
+  /** Logo à afficher sur le bouton. */
+  logo: "tiktok" | "instagram" | "facebook" | "google" | "dev"
   /** Fournisseur simulé, affiché à part. */
   isDev?: boolean
 }
@@ -261,15 +277,22 @@ export type SignInProvider = {
 export function enabledSignInProviders(): SignInProvider[] {
   const providers: SignInProvider[] = []
   if (env.TIKTOK_CLIENT_KEY && env.TIKTOK_CLIENT_SECRET)
-    providers.push({ id: "tiktok", label: "TikTok" })
+    providers.push({ id: "tiktok", label: "TikTok", logo: "tiktok" })
+  if (env.INSTAGRAM_CLIENT_ID && env.INSTAGRAM_CLIENT_SECRET)
+    providers.push({
+      id: INSTAGRAM_PROVIDER_ID,
+      label: "Instagram",
+      logo: "instagram",
+    })
   if (env.FACEBOOK_CLIENT_ID && env.FACEBOOK_CLIENT_SECRET)
-    providers.push({ id: "facebook", label: "Facebook" })
+    providers.push({ id: "facebook", label: "Facebook", logo: "facebook" })
   if (env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET)
-    providers.push({ id: "google", label: "Google / YouTube" })
+    providers.push({ id: "google", label: "Google", logo: "google" })
   if (env.ENABLE_DEV_OAUTH)
     providers.push({
       id: DEV_OAUTH_PROVIDER_ID,
       label: "Compte de test",
+      logo: "dev",
       isDev: true,
     })
   return providers

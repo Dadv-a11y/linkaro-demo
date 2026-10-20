@@ -6,6 +6,8 @@ import {
 import { Button } from "@linkaro/ui/components/button"
 import Link from "next/link"
 
+import { AuthShell } from "@/components/auth-shell"
+
 export const metadata = { title: "Connexion impossible — Linkaro" }
 
 const MESSAGES: Record<string, string> = {
@@ -22,17 +24,19 @@ export default async function SignInErrorPage({
   const { error } = await searchParams
   const code = typeof error === "string" ? error : ""
   return (
-    <main className="mx-auto flex min-h-svh max-w-sm flex-col justify-center gap-4 p-4">
-      <Alert variant="destructive">
-        <AlertTitle>La connexion n&apos;a pas abouti</AlertTitle>
-        <AlertDescription>
-          {MESSAGES[code] ??
-            "Une erreur est survenue avec le réseau social. Réessaie dans un instant."}
-        </AlertDescription>
-      </Alert>
-      <Button asChild>
-        <Link href="/connexion">Revenir à la connexion</Link>
-      </Button>
-    </main>
+    <AuthShell>
+      <div className="flex w-full max-w-sm flex-col gap-4">
+        <Alert variant="destructive">
+          <AlertTitle>La connexion n&apos;a pas abouti</AlertTitle>
+          <AlertDescription>
+            {MESSAGES[code] ??
+              "Une erreur est survenue avec le réseau social. Réessaie dans un instant."}
+          </AlertDescription>
+        </Alert>
+        <Button asChild>
+          <Link href="/connexion">Revenir à la connexion</Link>
+        </Button>
+      </div>
+    </AuthShell>
   )
 }

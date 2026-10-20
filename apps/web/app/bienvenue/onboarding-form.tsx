@@ -23,22 +23,32 @@ export function OnboardingForm() {
       <form action={action} className="flex flex-col gap-4">
         <div className="flex items-start gap-3">
           <Checkbox id="adult" name="adult" required />
-          <Label htmlFor="adult" className="leading-snug">
+          <Label htmlFor="adult" className="block leading-snug">
             J&apos;ai 18 ans ou plus.
           </Label>
         </div>
         <div className="flex items-start gap-3">
           <Checkbox id="terms" name="terms" required />
-          <Label htmlFor="terms" className="leading-snug font-normal">
-            J&apos;accepte les{" "}
-            <Link href="/conditions" className="underline" target="_blank">
-              conditions d&apos;utilisation
-            </Link>{" "}
-            et la{" "}
-            <Link href="/confidentialite" className="underline" target="_blank">
-              politique de confidentialité
-            </Link>
-            .
+          <Label htmlFor="terms" className="block leading-snug font-normal">
+            <span>
+              J&apos;accepte les{" "}
+              <Link
+                href="/conditions"
+                className="text-primary underline"
+                target="_blank"
+              >
+                conditions d&apos;utilisation
+              </Link>{" "}
+              et la{" "}
+              <Link
+                href="/confidentialite"
+                className="text-primary underline"
+                target="_blank"
+              >
+                politique de confidentialité
+              </Link>
+              .
+            </span>
           </Label>
         </div>
         {state.error ? (

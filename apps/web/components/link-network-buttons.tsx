@@ -4,6 +4,7 @@ import type { SignInProvider } from "@linkaro/auth"
 import { Button } from "@linkaro/ui/components/button"
 import { useState } from "react"
 
+import { ProviderLogo } from "@/components/provider-logo"
 import { authClient } from "@/lib/auth-client"
 
 /** Ajoute un réseau au compte du créateur connecté (nouvelle autorisation OAuth). */
@@ -40,7 +41,8 @@ export function LinkNetworkButtons({
           disabled={pending !== null}
           onClick={() => void link(provider.id)}
         >
-          {pending === provider.id ? "Redirection…" : `+ ${provider.label}`}
+          <ProviderLogo logo={provider.logo} className="size-4" />
+          {pending === provider.id ? "Redirection…" : provider.label}
         </Button>
       ))}
     </div>

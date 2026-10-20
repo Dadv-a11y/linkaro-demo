@@ -12,6 +12,7 @@ import {
 } from "@linkaro/ui/components/card"
 import { redirect } from "next/navigation"
 
+import { AuthShell } from "@/components/auth-shell"
 import { requireCreator } from "@/lib/auth"
 
 import { OnboardingForm } from "./onboarding-form"
@@ -23,8 +24,8 @@ export default async function WelcomePage() {
   if (creator.adultConfirmedAt) redirect("/tableau-de-bord")
 
   return (
-    <main className="flex min-h-svh items-center justify-center p-4">
-      <Card className="w-full max-w-sm">
+    <AuthShell>
+      <Card className="w-full max-w-sm shadow-lg">
         <CardHeader className="items-center text-center">
           <Avatar className="mb-2 size-16">
             {creator.image ? <AvatarImage src={creator.image} alt="" /> : null}
@@ -44,6 +45,6 @@ export default async function WelcomePage() {
           <OnboardingForm />
         </CardContent>
       </Card>
-    </main>
+    </AuthShell>
   )
 }
