@@ -75,7 +75,7 @@ On le présente comme un avantage (« pour ne jamais perdre ton compte et recevo
 
 ### 2.5 L'équipe Linkaro (administration)
 
-Pas de mot de passe non plus : connexion **Google** (compte de l'équipe) **+ double authentification obligatoire** (application d'authentification ou passkey). C'est le niveau ASVS 2 prévu pour l'admin.
+Voir la section 5 : aucun compte ouvert librement, uniquement un premier administrateur créé par script, puis des invitations.
 
 ---
 
@@ -130,3 +130,57 @@ Dans les deux cas, l'image est **supprimée après extraction** (minimisation de
 | Âge | Case « J'ai 18 ans ou plus » à la fin de l'inscription |
 
 L'inscription et la fonctionnalité 1 (connexion des réseaux) **fusionnent** : c'est plus simple pour le créateur et pour le code.
+
+---
+
+## 5. Accès de l'équipe Linkaro (administration)
+
+> Proposition du porteur de projet : **un premier administrateur créé par un script**, puis **tous les autres invités depuis le dashboard**. Il n'existe donc **aucune page d'inscription** à l'administration.
+
+### 5.1 Principe
+
+```
+Serveur (accès SSH)                Dashboard admin                     Nouvel administrateur
+───────────────────                ───────────────                     ─────────────────────
+pnpm admin:create                  Superadmin : « Inviter »            Ouvre le lien (usage unique, 48 h)
+  --email awa@…                      e-mail + rôle + motif               │
+  │                                  │                                  ▼
+  ▼                                  ▼                                Se connecte avec le compte
+Lien d'invitation affiché          Lien envoyé par e-mail               correspondant à l'e-mail invité
+UNE SEULE FOIS dans le terminal    (ou copié et transmis à la main)     │
+(rien n'est envoyé par le réseau)                                       ▼
+                                                                      Active la double authentification
+                                                                      (obligatoire avant tout accès)
+```
+
+**La confiance de départ repose sur l'accès au serveur** : seul quelqu'un qui peut se connecter en SSH au VPS peut créer le premier administrateur. C'est le point d'ancrage le plus solide disponible.
+
+### 5.2 Règles de sécurité proposées
+
+| Sujet | Règle |
+|---|---|
+| **Script de démarrage** (`admin:create`) | Crée un **superadmin**, uniquement s'il n'en existe aucun : le script refuse sinon, pour qu'on ne puisse pas s'en servir comme porte dérobée. Le lien est affiché une seule fois. L'action est inscrite à l'audit (acteur : système, machine, date) |
+| **Invitation** | Lien à **usage unique**, valable **48 h**, lié à l'**adresse e-mail invitée**. Seule l'empreinte du jeton est stockée en base, jamais le jeton lui-même. Révocable tant qu'elle n'est pas acceptée |
+| **Connexion** | Sans mot de passe (méthode à choisir, §5.4), **toujours suivie de la double authentification** (application d'authentification ou passkey) |
+| **Page de connexion** | Il reste un écran de connexion pour **revenir** (« Se connecter »), mais **aucun bouton d'inscription**. Une personne non invitée ne peut rien créer |
+| **Rôles** | `superadmin` (gère l'équipe), `ops` (pilotage, clients), `support` (fiches clients, actions de support), `tech` (journaux, audit, enquêtes). Chacun ne voit que ce dont il a besoin |
+| **Garde-fous** | Personne ne modifie son propre rôle. Le dernier superadmin ne peut pas être retiré. Tout changement de rôle exige un **motif**, inscrit à l'audit |
+| **Sessions** | Plus courtes que pour les créateurs : fin après 30 min d'inactivité et 8 h au maximum. Nouvelle double authentification exigée avant une action sensible (inviter, changer un rôle, exporter) |
+| **Départ d'un membre** | Désactivation immédiate et **révocation de toutes ses sessions** |
+| **Perte de la double authentification** | Un autre superadmin la réinitialise (avec motif, audité). Si le seul superadmin est bloqué : script de secours `admin:recover` sur le serveur, lui aussi audité |
+
+### 5.3 Isolation entre créateurs et équipe
+
+**Recommandation : deux annuaires de comptes séparés.** Les tables `staff_*` pour l'équipe sont distinctes des comptes créateurs, avec des cookies différents sur `admin.` et sur le site public.
+- Un bug ou une faille côté créateurs **ne peut pas** transformer un compte créateur en administrateur.
+- Better Auth permet deux configurations indépendantes dans le même projet, avec des noms de tables différents.
+
+L'alternative, une seule table d'utilisateurs avec un champ « rôle », est plus simple. Mais une erreur de vérification de rôle suffirait alors à ouvrir l'administration.
+
+### 5.4 Méthode de connexion de l'équipe (à choisir)
+
+| Option | Pour | Contre |
+|---|---|---|
+| **Google + double authentification** | Aucun service d'e-mail à configurer. Google garantit que l'adresse est vérifiée | Chaque membre doit avoir un compte Google |
+| **Lien magique par e-mail + double authentification** | Fonctionne avec n'importe quelle adresse | Demande un fournisseur d'e-mails dès maintenant |
+| **Passkey uniquement** (empreinte, Face ID, clé de sécurité) | Le plus sûr, résiste à l'hameçonnage | Moins familier, perte d'appareil à gérer |
