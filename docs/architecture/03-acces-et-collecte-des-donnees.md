@@ -4,7 +4,7 @@
 > 1. Faut-il vraiment une inscription par e-mail et mot de passe, alors qu'on veut que le créateur déclare le moins possible ? Ne peut-on pas l'inscrire directement **en connectant ses réseaux sociaux** et récupérer ses informations au passage ?
 > 2. Pour les réseaux sans API, peut-on développer une **extension de navigateur** qui lit le tableau de bord du créateur, par capture d'écran ou par lecture du HTML, avec son autorisation ?
 >
-> **Statut :** étude et recommandation, octobre 2026, à valider.
+> **Statut :** décisions prises le 20 octobre 2026 (voir §6).
 
 ---
 
@@ -184,3 +184,26 @@ L'alternative, une seule table d'utilisateurs avec un champ « rôle », est plu
 | **Google + double authentification** | Aucun service d'e-mail à configurer. Google garantit que l'adresse est vérifiée | Chaque membre doit avoir un compte Google |
 | **Lien magique par e-mail + double authentification** | Fonctionne avec n'importe quelle adresse | Demande un fournisseur d'e-mails dès maintenant |
 | **Passkey uniquement** (empreinte, Face ID, clé de sécurité) | Le plus sûr, résiste à l'hameçonnage | Moins familier, perte d'appareil à gérer |
+
+---
+
+## 6. Décisions du porteur de projet (20 octobre 2026)
+
+| Sujet | Décision |
+|---|---|
+| Inscription des créateurs | **Sans mot de passe** : connecter un premier réseau crée le compte. Seule question obligatoire : « J'ai 18 ans ou plus » (et l'acceptation des conditions) |
+| Numéro WhatsApp | **Proposé après l'inscription**, avec insistance tant qu'un seul réseau est connecté. Il sert à récupérer le compte et à recevoir les opportunités |
+| Accès de l'équipe | Premier superadmin **créé par script**, puis **invitations** depuis le dashboard, sans page d'inscription |
+| Connexion de l'équipe | **Lien magique par e-mail + double authentification obligatoire**. En développement, le lien s'affiche dans les journaux. Le fournisseur d'e-mails de production reste à choisir (Brevo, Resend ou SMTP) |
+| Comptes équipe / créateurs | **Annuaires séparés** (tables et cookies distincts) |
+| Réseaux sans API | Le porteur de projet souhaite à terme une **extension qui lit le HTML** des tableaux de bord, l'import par capture d'écran restant une option secondaire. **Reporté à une phase ultérieure** |
+
+### 6.1 Conditions posées pour l'extension (phase ultérieure)
+
+Les risques décrits au §3.1 restent valables. Avant tout développement de l'extension :
+1. **Avis juridique** sur les conditions de chaque plateforme visée (Meta, TikTok, Snapchat…). On ne cible que celles qui ne l'interdisent pas, ou on obtient leur accord.
+2. **Pas de concurrence avec nos accès officiels.** L'extension ne sert que pour les réseaux et les données **sans API**, pour ne pas mettre en danger les autorisations obtenues ailleurs.
+3. **Lecture à la demande uniquement.** Le créateur ouvre lui-même sa page de statistiques et clique sur « Envoyer à Linkaro ». Pas de navigation automatique ni de collecte en arrière-plan.
+4. **Moindre privilège.** L'extension n'a accès qu'aux pages de statistiques concernées. Elle ne lit **jamais les cookies ni les sessions** et n'envoie que les chiffres extraits, pas le HTML complet.
+5. **Ordinateur d'abord.** Sur mobile, seul Firefox pour Android accepte les extensions. L'import par capture reste la solution mobile.
+6. Les chiffres ainsi obtenus portent un niveau de confiance distinct (« Extension du JJ/MM »), au même titre que les captures.
