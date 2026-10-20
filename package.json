@@ -1,0 +1,32 @@
+{
+  "name": "linkaro",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "build": "turbo build",
+    "dev": "turbo dev",
+    "dev:web": "turbo dev --filter=web",
+    "dev:admin": "turbo dev --filter=admin",
+    "lint": "turbo lint",
+    "format": "prettier --write \"**/*.{ts,tsx,js,mjs,json,md,css}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,mjs,json,md,css}\"",
+    "typecheck": "turbo typecheck",
+    "test": "turbo test",
+    "db:generate": "pnpm --filter @linkaro/db db:generate",
+    "db:migrate": "pnpm --filter @linkaro/db db:migrate",
+    "db:deploy": "pnpm --filter @linkaro/db db:deploy",
+    "db:studio": "pnpm --filter @linkaro/db db:studio"
+  },
+  "devDependencies": {
+    "@linkaro/eslint-config": "workspace:*",
+    "@linkaro/typescript-config": "workspace:*",
+    "prettier": "^3.9.10",
+    "prettier-plugin-tailwindcss": "^0.8.1",
+    "turbo": "^2.11.9",
+    "typescript": "^5"
+  },
+  "packageManager": "pnpm@10.28.0",
+  "engines": {
+    "node": ">=22.12.0"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "extends": "@linkaro/typescript-config/react-library.json",
+  "compilerOptions": {
+    "paths": {
+      "@linkaro/ui/*": ["./src/*"]
+    }
+  },
+  "include": ["."],
+  "exclude": ["node_modules", "dist"]
+}

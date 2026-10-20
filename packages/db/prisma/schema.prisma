@@ -1,0 +1,11 @@
+// Schéma Prisma de Linkaro.
+// Les modèles sont ajoutés fonctionnalité par fonctionnalité (audit, auth, créateurs…).
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}

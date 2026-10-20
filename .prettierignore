@@ -1,0 +1,11 @@
+dist/
+node_modules/
+.next/
+.turbo/
+coverage/
+pnpm-lock.yaml
+.pnpm-store/
+**/generated/
+# Pages historiques (site vitrine et questionnaire) et documentation : mises en forme à la main
+*.html
+docs/

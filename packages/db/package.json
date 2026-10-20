@@ -1,0 +1,32 @@
+{
+  "name": "@linkaro/db",
+  "version": "0.0.0",
+  "type": "module",
+  "private": true,
+  "dependencies": {
+    "@prisma/adapter-pg": "^7.10.1",
+    "@prisma/client": "^7.10.1",
+    "pg": "^8.23.1"
+  },
+  "devDependencies": {
+    "@linkaro/eslint-config": "workspace:*",
+    "@linkaro/typescript-config": "workspace:*",
+    "@types/pg": "^8.23.1",
+    "dotenv": "^18.0.8",
+    "eslint": "^10.13.0",
+    "prisma": "^7.10.1",
+    "typescript": "^5.9.3"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
+    "db:studio": "prisma studio",
+    "postinstall": "prisma generate",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint"
+  }
+}

@@ -8,6 +8,7 @@ Recherche menée avant le développement, pour comprendre comment fonctionne le 
 | [02-integrations-reseaux-sociaux.md](02-integrations-reseaux-sociaux.md) | Ce que TikTok, Instagram, YouTube et Facebook permettent réellement via leurs API, ce qui est possible avec les messageries, **parcours d'inscription proposé**, modèle de données, ordre de développement, prérequis administratifs |
 | [03-sources-videos.md](03-sources-videos.md) | Synthèse des 7 vidéos fournies par le client |
 | [04-score-engagement.md](04-score-engagement.md) | Évaluer un créateur au-delà des abonnés : formules d'engagement, références par réseau et palier, **« Indice Linkaro »**, détection d'anomalies, exemples chiffrés, lien avec le tarif |
+| [05-modes-test-plateformes.md](05-modes-test-plateformes.md) | Tester les connexions TikTok, Instagram, YouTube, Facebook et Snapchat en mode développement : comptes autorisés, sous-domaine HTTPS, fournisseur simulé |
 
 Voir aussi : [../questionnaire-branches.md](../questionnaire-branches.md), la carte des branchements du questionnaire de cadrage v2.
 

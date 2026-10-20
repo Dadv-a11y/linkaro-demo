@@ -1,0 +1,55 @@
+# Linkaro
+
+Plateforme qui aide les créateurs de contenu africains à développer et gérer leurs collaborations avec les marques.
+
+- Recherche et cadrage : [`docs/recherche/`](docs/recherche/README.md)
+- Architecture et stack : [`docs/architecture/01-stack-technique.md`](docs/architecture/01-stack-technique.md)
+- Questionnaire de cadrage : `Linkaro _ questionnaire de cadrage.html` ([carte des branchements](docs/questionnaire-branches.md))
+
+## Structure
+
+| Dossier                                                | Rôle                                          |
+| ------------------------------------------------------ | --------------------------------------------- |
+| `apps/web`                                             | Application des créateurs (port 3000)         |
+| `apps/admin`                                           | Pilotage et supervision technique (port 3001) |
+| `apps/worker`                                          | Tâches de fond                                |
+| `packages/db`                                          | Schéma Prisma, migrations, client PostgreSQL  |
+| `packages/env`                                         | Variables d'environnement validées (Zod)      |
+| `packages/ui`                                          | Composants shadcn/ui partagés et styles       |
+| `packages/eslint-config`, `packages/typescript-config` | Configurations partagées                      |
+
+## Démarrer en local
+
+Prérequis : Node.js 22, pnpm 10, PostgreSQL 16+.
+
+```bash
+# 1. Base de données locale
+sudo -u postgres psql -c "CREATE ROLE linkaro LOGIN PASSWORD 'linkaro_dev' CREATEDB;"
+sudo -u postgres psql -c "CREATE DATABASE linkaro_dev OWNER linkaro;"
+
+# 2. Configuration
+cp .env.example .env
+
+# 3. Dépendances (génère aussi le client Prisma)
+pnpm install
+
+# 4. Lancer les applications
+pnpm dev          # web + admin + worker
+pnpm dev:web      # uniquement l'app créateurs
+```
+
+Vérifier que tout fonctionne : <http://localhost:3000/api/health> et <http://localhost:3001/api/health> doivent répondre `"status": "ok"`.
+
+## Commandes utiles
+
+| Commande                                             | Effet                                               |
+| ---------------------------------------------------- | --------------------------------------------------- |
+| `pnpm lint` / `pnpm typecheck` / `pnpm format:check` | Contrôles qualité                                   |
+| `pnpm build`                                         | Build de production (Next.js `standalone` + worker) |
+| `pnpm db:migrate`                                    | Créer et appliquer une migration en développement   |
+| `pnpm db:deploy`                                     | Appliquer les migrations en production              |
+| `pnpm db:studio`                                     | Explorer la base dans le navigateur                 |
+
+## Production (VPS, sans Docker)
+
+Après `pnpm build`, chaque application démarre avec `pnpm --filter <app> start`. Cette commande lance le serveur autonome `.next/standalone/apps/<app>/server.js`, avec les variables du `.env` racine. Les processus seront gérés par PM2 derrière Caddy (configuration à venir).
