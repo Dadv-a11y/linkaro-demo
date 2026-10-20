@@ -179,3 +179,117 @@ model AuthRateLimit {
 
   @@map("auth_rate_limit")
 }
+
+// ─── Équipe Linkaro : comptes, invitations, double authentification ───────────
+// Annuaire séparé des créateurs (packages/auth/src/staff-auth.ts). Aucun mot de passe,
+// aucune inscription : premier superadmin créé par script, les autres sont invités.
+
+model StaffMember {
+  id               String            @id
+  name             String
+  email            String            @unique
+  emailVerified    Boolean           @default(false) @map("email_verified")
+  image            String?
+  /// superadmin | ops | support | tech (contrainte CHECK en base)
+  role             String
+  /// active | disabled (contrainte CHECK en base)
+  status           String            @default("active")
+  twoFactorEnabled Boolean?          @default(false) @map("two_factor_enabled")
+  createdAt        DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime          @updatedAt @map("updated_at") @db.Timestamptz(3)
+  sessions         StaffSession[]
+  accounts         StaffAccount[]
+  twoFactors       StaffTwoFactor[]
+  invitationsSent  StaffInvitation[] @relation("InvitedBy")
+
+  @@map("staff_member")
+}
+
+model StaffSession {
+  id                     String      @id
+  token                  String      @unique
+  expiresAt              DateTime    @map("expires_at") @db.Timestamptz(3)
+  ipAddress              String?     @map("ip_address")
+  userAgent              String?     @map("user_agent")
+  /// Renseigné uniquement après un code de double authentification valide.
+  secondFactorVerifiedAt DateTime?   @map("second_factor_verified_at") @db.Timestamptz(3)
+  userId                 String      @map("staff_member_id")
+  member                 StaffMember @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt              DateTime    @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt              DateTime    @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@index([userId])
+  @@map("staff_session")
+}
+
+/// Imposé par Better Auth (le lien magique n'en crée pas de nouveau).
+model StaffAccount {
+  id                    String      @id
+  accountId             String      @map("account_id")
+  providerId            String      @map("provider_id")
+  userId                String      @map("staff_member_id")
+  member                StaffMember @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?     @map("access_token")
+  refreshToken          String?     @map("refresh_token")
+  idToken               String?     @map("id_token")
+  accessTokenExpiresAt  DateTime?   @map("access_token_expires_at") @db.Timestamptz(3)
+  refreshTokenExpiresAt DateTime?   @map("refresh_token_expires_at") @db.Timestamptz(3)
+  scope                 String?
+  password              String?
+  createdAt             DateTime    @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt             DateTime    @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@index([userId])
+  @@map("staff_account")
+}
+
+/// Valeurs temporaires (liens magiques, défis de double authentification…).
+model StaffVerification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime @map("expires_at") @db.Timestamptz(3)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@index([identifier])
+  @@map("staff_verification")
+}
+
+/// Secret TOTP et codes de secours (chiffrés par Better Auth).
+model StaffTwoFactor {
+  id                      String      @id
+  secret                  String
+  backupCodes             String      @map("backup_codes")
+  verified                Boolean?    @default(true)
+  failedVerificationCount Int?        @default(0) @map("failed_verification_count")
+  lockedUntil             DateTime?   @map("locked_until") @db.Timestamptz(3)
+  userId                  String      @map("staff_member_id")
+  member                  StaffMember @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([secret])
+  @@index([userId])
+  @@map("staff_two_factor")
+}
+
+/// Invitation d'un membre de l'équipe. Seule l'empreinte du jeton est stockée.
+model StaffInvitation {
+  id          String       @id @default(uuid())
+  email       String
+  /// superadmin | ops | support | tech (contrainte CHECK en base)
+  role        String
+  /// SHA-256 du jeton envoyé (le jeton lui-même n'est jamais stocké).
+  tokenHash   String       @unique @map("token_hash")
+  /// Motif de l'invitation (obligatoire, inscrit à l'audit).
+  reason      String
+  /// Absent pour le premier superadmin (créé par script sur le serveur).
+  invitedById String?      @map("invited_by_id")
+  invitedBy   StaffMember? @relation("InvitedBy", fields: [invitedById], references: [id], onDelete: SetNull)
+  expiresAt   DateTime     @map("expires_at") @db.Timestamptz(3)
+  acceptedAt  DateTime?    @map("accepted_at") @db.Timestamptz(3)
+  revokedAt   DateTime?    @map("revoked_at") @db.Timestamptz(3)
+  createdAt   DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@index([email])
+  @@map("staff_invitation")
+}

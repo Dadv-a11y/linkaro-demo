@@ -17,7 +17,8 @@
     "db:deploy": "pnpm --filter @linkaro/db db:deploy",
     "db:studio": "pnpm --filter @linkaro/db db:studio",
     "audit:deps": "pnpm audit --audit-level=high",
-    "journal:verify": "pnpm --filter worker journal:verify"
+    "journal:verify": "pnpm --filter worker journal:verify",
+    "admin:create": "pnpm --filter @linkaro/auth admin:create"
   },
   "devDependencies": {
     "@linkaro/eslint-config": "workspace:*",

@@ -39,6 +39,21 @@ export const env = createEnv({
     // tokens OAuth en base : la changer rend les tokens existants illisibles.
     CREATOR_AUTH_SECRET: z.string().min(32, "32 caractères minimum"),
 
+    // Authentification de l'équipe (annuaire séparé des créateurs).
+    STAFF_AUTH_SECRET: z.string().min(32, "32 caractères minimum"),
+
+    // E-mails (Nodemailer + SMTP). Sans SMTP_HOST hors production, les e-mails
+    // sont écrits dans le dossier .dev-mails/ au lieu d'être envoyés.
+    SMTP_HOST: z.string().optional(),
+    SMTP_PORT: z.coerce.number().int().positive().default(587),
+    SMTP_SECURE: z
+      .enum(["true", "false"])
+      .default("false")
+      .transform((value) => value === "true"),
+    SMTP_USER: z.string().optional(),
+    SMTP_PASSWORD: z.string().optional(),
+    MAIL_FROM: z.string().default("Linkaro <no-reply@linkaro.invalid>"),
+
     // Réseaux sociaux : chaque fournisseur n'est activé que si ses clés sont présentes.
     GOOGLE_CLIENT_ID: z.string().optional(),
     GOOGLE_CLIENT_SECRET: z.string().optional(),
@@ -60,6 +75,14 @@ export const env = createEnv({
       }),
   },
   runtimeEnv: process.env,
+  // Règles qui portent sur plusieurs variables.
+  createFinalSchema: (shape) =>
+    z
+      .object(shape)
+      .refine((vars) => !(vars.NODE_ENV === "production" && !vars.SMTP_HOST), {
+        message: "SMTP_HOST est obligatoire en production (envoi des e-mails)",
+        path: ["SMTP_HOST"],
+      }),
   emptyStringAsUndefined: true,
   // Validation au démarrage du serveur, pas pendant `next build` (qui n'utilise
   // aucune de ces valeurs). SKIP_ENV_VALIDATION=1 : CI sans .env complet.

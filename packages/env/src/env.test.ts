@@ -11,6 +11,8 @@ async function loadEnv(vars: Record<string, string>) {
 const base = {
   DATABASE_URL: "postgresql://app:secret@localhost:5432/linkaro",
   CREATOR_AUTH_SECRET: "x".repeat(32),
+  STAFF_AUTH_SECRET: "y".repeat(32),
+  SMTP_HOST: "smtp.example.com",
 }
 
 describe("validation de l'environnement", () => {
@@ -63,6 +65,12 @@ describe("validation de l'environnement", () => {
       ENABLE_DEV_OAUTH: "true",
     })
     expect(env.ENABLE_DEV_OAUTH).toBe(true)
+  })
+
+  it("exige un serveur SMTP en production", async () => {
+    await expect(
+      loadEnv({ ...base, NODE_ENV: "production", SMTP_HOST: "" })
+    ).rejects.toThrow()
   })
 
   it("refuse un secret d'authentification trop court", async () => {

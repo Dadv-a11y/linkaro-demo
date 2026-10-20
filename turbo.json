@@ -19,7 +19,14 @@
     "TIKTOK_CLIENT_SECRET",
     "ENABLE_DEV_OAUTH",
     "INSTAGRAM_CLIENT_ID",
-    "INSTAGRAM_CLIENT_SECRET"
+    "INSTAGRAM_CLIENT_SECRET",
+    "STAFF_AUTH_SECRET",
+    "SMTP_HOST",
+    "SMTP_PORT",
+    "SMTP_SECURE",
+    "SMTP_USER",
+    "SMTP_PASSWORD",
+    "MAIL_FROM"
   ],
   "tasks": {
     "build": {
