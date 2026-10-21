@@ -23,6 +23,7 @@ import {
   SidebarMenuItem,
 } from "@linkaro/ui/components/sidebar"
 import {
+  ChartColumn,
   ChevronsUpDown,
   FileClock,
   LayoutDashboard,
@@ -53,6 +54,7 @@ export type AdminNavGroup = {
 /** Icônes passées par nom : le serveur ne peut pas transmettre de composant. */
 const ICONS = {
   overview: LayoutDashboard,
+  metrics: ChartColumn,
   creators: Users,
   audit: FileClock,
   security: ShieldAlert,
@@ -106,7 +108,11 @@ export function AdminSidebar({
                       ) : (
                         <SidebarMenuButton
                           asChild
-                          isActive={pathname === item.href}
+                          isActive={
+                            item.href === "/"
+                              ? pathname === "/"
+                              : pathname.startsWith(item.href)
+                          }
                         >
                           <Link href={item.href}>
                             <Icon />
