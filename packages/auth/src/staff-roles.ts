@@ -18,6 +18,8 @@ export type Permission =
   | "staff.manage" // inviter, changer un rôle, désactiver
   | "creators.read" // fiches créateurs
   | "creators.suspend" // suspendre / réactiver un créateur
+  | "creators.export" // exporter les données d'un créateur (droit d'accès)
+  | "creators.delete" // supprimer définitivement un créateur (droit à l'effacement)
   | "metrics.read" // indicateurs de pilotage
   | "audit.read" // journal d'audit
   | "security.read" // événements de sécurité
@@ -29,6 +31,8 @@ const PERMISSIONS: Record<StaffRole, ReadonlySet<Permission>> = {
     "staff.manage",
     "creators.read",
     "creators.suspend",
+    "creators.export",
+    "creators.delete",
     "metrics.read",
     "audit.read",
     "security.read",

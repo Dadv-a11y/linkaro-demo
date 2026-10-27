@@ -15,3 +15,8 @@ auditConfig:
     # braces <=3.0.3 (ReDoS) : uniquement via @next/eslint-plugin-next (outil de lint,
     # jamais livré en production, motifs de fichiers maîtrisés). Aucun correctif publié.
     - GHSA-vfj7-8cjw-p6xm
+
+# Versions corrigées imposées pour des dépendances indirectes vulnérables.
+overrides:
+  # GHSA-27r3-jxmh-p828 (déni de service) : via le CLI shadcn (outil de développement).
+  "body-parser@>=2.0.0 <2.4.0": "^2.4.0"

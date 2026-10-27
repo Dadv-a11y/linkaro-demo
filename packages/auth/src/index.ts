@@ -50,3 +50,12 @@ export {
   type StaffRole,
 } from "./staff-roles"
 export { evaluateStaffAccess, type StaffAccessDecision } from "./staff-access"
+export {
+  CreatorAdminError,
+  deleteCreator,
+  exportCreatorData,
+  isPlaceholderEmail,
+  reactivateCreator,
+  revealCreatorEmail,
+  suspendCreator,
+} from "./creator-admin"

@@ -9,6 +9,7 @@ import {
 } from "@linkaro/ui/components/card"
 
 import { requireStaff } from "@/lib/auth"
+import { actionLabel } from "@/lib/audit-labels"
 import { countRecentSecurityAlerts } from "@/lib/security-alerts"
 
 export const metadata = { title: "Vue d'ensemble — Linkaro Admin" }
@@ -19,32 +20,6 @@ const time = new Intl.DateTimeFormat("fr-FR", {
   minute: "2-digit",
   timeZone: "Africa/Douala",
 })
-
-/** Libellés des actions du journal d'audit et des événements de sécurité. */
-const LABELS: Record<string, string> = {
-  "creator.signup": "Inscription d'un créateur",
-  "creator.onboarded": "Inscription créateur terminée",
-  "creator.deleted_underage": "Compte supprimé (moins de 18 ans)",
-  "auth.login": "Connexion d'un créateur",
-  "auth.logout": "Déconnexion d'un créateur",
-  "social.connect": "Réseau connecté",
-  "social.disconnect": "Réseau déconnecté",
-  "staff.invite": "Invitation envoyée",
-  "staff.invitation_accepted": "Invitation acceptée",
-  "staff.invitation_revoked": "Invitation révoquée",
-  "staff.login": "Connexion d'un membre de l'équipe",
-  "staff.logout": "Déconnexion d'un membre de l'équipe",
-  "staff.second_factor_verified": "Double authentification validée",
-  "staff.role_changed": "Rôle modifié",
-  "staff.disabled": "Membre désactivé",
-  "staff.magic_link_unknown":
-    "Lien de connexion demandé pour une adresse inconnue",
-  "staff.second_factor_failed": "Code de double authentification erroné",
-  "staff.second_factor_bypass_attempt":
-    "Tentative de contournement de la double authentification",
-  "staff.access_denied": "Accès refusé à une page réservée",
-  "auth.error": "Erreur d'authentification",
-}
 
 type ActivityItem = {
   key: string
@@ -113,7 +88,7 @@ export default async function OverviewPage() {
     ...audit.map((a) => ({
       key: `a${a.id}`,
       at: a.createdAt,
-      label: LABELS[a.action] ?? a.action,
+      label: actionLabel(a.action),
       who:
         a.actorType === "ADMIN"
           ? (staffName.get(a.actorId ?? "") ?? "Équipe")
@@ -125,7 +100,7 @@ export default async function OverviewPage() {
     ...events.map((e) => ({
       key: `s${e.id}`,
       at: e.createdAt,
-      label: LABELS[e.type] ?? e.type,
+      label: actionLabel(e.type),
       who: "—",
       tone:
         e.severity === "CRITICAL" ? ("critical" as const) : ("warn" as const),

@@ -35,13 +35,21 @@ export default async function StaffSpaceLayout({
       label: "Pilotage",
       items: [
         { title: "Vue d'ensemble", href: "/", icon: "overview" as const },
+        ...(allowed("metrics.read")
+          ? [
+              {
+                title: "Indicateurs",
+                href: "/indicateurs",
+                icon: "metrics" as const,
+              },
+            ]
+          : []),
         ...(allowed("creators.read")
           ? [
               {
                 title: "Créateurs",
                 href: "/createurs",
                 icon: "creators" as const,
-                soon: true,
               },
             ]
           : []),
