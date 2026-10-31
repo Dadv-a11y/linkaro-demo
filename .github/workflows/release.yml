@@ -80,5 +80,10 @@ jobs:
           flags=""
           # Un tiret dans le tag (v0.1.0-test.1) = pré-release.
           case "$GITHUB_REF_NAME" in *-*) flags="--prerelease" ;; esac
-          gh release create "$GITHUB_REF_NAME" release/*.tar.gz release/SHA256SUMS.txt \
-            --title "Linkaro $GITHUB_REF_NAME" --generate-notes $flags
+          # Release déjà créée à la main depuis la page GitHub : on y joint simplement les archives.
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" release/*.tar.gz release/SHA256SUMS.txt --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" release/*.tar.gz release/SHA256SUMS.txt \
+              --title "Linkaro $GITHUB_REF_NAME" --generate-notes $flags
+          fi
