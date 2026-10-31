@@ -6,10 +6,11 @@
   "scripts": {
     "dev": "tsx watch --env-file-if-exists=../../.env src/index.ts",
     "build": "tsup",
-    "start": "node --env-file-if-exists=../../.env dist/index.js",
+    "start": "node --env-file-if-exists=../../.env dist/index.mjs",
     "typecheck": "tsc --noEmit",
     "lint": "eslint",
-    "journal:verify": "tsx --env-file-if-exists=../../.env src/cli/verify-journal.ts"
+    "journal:verify": "tsx --env-file-if-exists=../../.env src/cli/verify-journal.ts",
+    "migrate": "tsx --env-file-if-exists=../../.env src/cli/migrate.ts ../../packages/db/prisma/migrations"
   },
   "dependencies": {
     "@linkaro/db": "workspace:*",
@@ -20,9 +21,12 @@
     "@linkaro/eslint-config": "workspace:*",
     "@linkaro/typescript-config": "workspace:*",
     "@types/node": "^22.20.5",
+    "@types/pg": "^8.23.1",
     "eslint": "^10.13.0",
+    "pg": "^8.23.1",
     "tsup": "^9.0.0",
     "tsx": "^4.23.15",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "zod": "^4.6.7"
   }
 }

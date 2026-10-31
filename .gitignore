@@ -51,3 +51,4 @@ logs/
 
 # e-mails de développement
 .dev-mails/
+/release/

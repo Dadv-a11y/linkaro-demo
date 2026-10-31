@@ -65,6 +65,10 @@ Vérifier que tout fonctionne : <http://localhost:3000/api/health> et <http://lo
 | `pnpm admin:create --email <adresse>`                | Inviter le premier superadmin (refusé s'il existe)  |
 | `pnpm journal:verify`                                | Vérifier la chaîne du journal d'audit               |
 
+## Releases
+
+Un tag `vX.Y.Z` (ou `vX.Y.Z-test.N` pour une pré-release) déclenche la construction des archives autonomes `web`, `admin` et `worker`, publiées sur la page « Releases » du dépôt. Installation sur un hébergement cPanel : [docs/deploiement/cpanel.md](docs/deploiement/cpanel.md). Les migrations restent compatibles avec PostgreSQL 10 (test automatique + CI).
+
 ## Production (VPS, sans Docker)
 
 Après `pnpm build`, chaque application démarre avec `pnpm --filter <app> start`. Cette commande lance le serveur autonome `.next/standalone/apps/<app>/server.js`, avec les variables du `.env` racine. Les processus seront gérés par PM2 derrière Caddy (configuration à venir).

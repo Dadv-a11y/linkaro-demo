@@ -43,6 +43,43 @@ jobs:
       - run: pnpm test
       - run: pnpm build
 
+  postgres-10:
+    name: Tests et migrations sur PostgreSQL 10
+    runs-on: ubuntu-latest
+    env:
+      SKIP_ENV_VALIDATION: "1"
+      DATABASE_MIGRATION_URL: postgresql://postgres:postgres@localhost:5432/postgres
+    # Le serveur de test tourne sous PostgreSQL 10 : on rejoue tout dessus.
+    services:
+      postgres:
+        image: postgres:10
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # Tests d'intégration (journaux, comptes, équipe) et migrations Prisma sur PostgreSQL 10.
+      - run: pnpm test
+      # L'outil de migration livré avec la release, puis contrôle par Prisma lui-même.
+      - name: Outil de migration livré avec la release
+        env:
+          PGPASSWORD: postgres
+        run: |
+          pnpm --filter worker build
+          psql -h localhost -U postgres -c 'CREATE DATABASE linkaro_migrate_check'
+          export DATABASE_MIGRATION_URL="postgresql://postgres:postgres@localhost:5432/linkaro_migrate_check?schema=public"
+          node apps/worker/dist/migrate.mjs packages/db/prisma/migrations
+          pnpm --filter @linkaro/db exec prisma migrate status
+
   security:
     name: Sécurité (dépendances et secrets)
     runs-on: ubuntu-latest
