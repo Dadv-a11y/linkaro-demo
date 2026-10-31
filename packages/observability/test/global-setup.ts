@@ -33,7 +33,14 @@ export default async function setup() {
   return async () => {
     const client = new pg.Client({ connectionString: adminUrl })
     await client.connect()
-    await client.query(`DROP DATABASE IF EXISTS "${name}" WITH (FORCE)`)
+    // Connexions fermées d'abord : « DROP DATABASE … WITH (FORCE) » n'existe qu'à partir
+    // de PostgreSQL 13, et le serveur de test est en version 10.
+    await client.query(
+      `SELECT pg_terminate_backend(pid) FROM pg_stat_activity
+       WHERE datname = $1 AND pid <> pg_backend_pid()`,
+      [name]
+    )
+    await client.query(`DROP DATABASE IF EXISTS "${name}"`)
     await client.end()
   }
 }
