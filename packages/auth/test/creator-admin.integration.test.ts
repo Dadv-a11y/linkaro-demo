@@ -57,6 +57,8 @@ async function creatorWithNetwork(email = "awa@exemple.com") {
 const actions = (targetId: string) =>
   prisma.auditLog.findMany({
     where: { targetType: "creator", targetId },
+    // Ordre explicite : sans lui, l'ordre des lignes dépend de la version de PostgreSQL.
+    orderBy: { id: "asc" },
     select: { action: true, reason: true },
   })
 
