@@ -12,11 +12,11 @@
     "@linkaro/eslint-config": "workspace:*",
     "@linkaro/typescript-config": "workspace:*",
     "@types/pg": "^8.23.1",
-    "dotenv": "^18.0.8",
-    "eslint": "^10.13.0",
+    "dotenv": "^18.0.10",
+    "eslint": "^10.14.0",
     "prisma": "^7.10.1",
     "typescript": "^5.9.3",
-    "vitest": "^5.0.5"
+    "vitest": "^5.1.0"
   },
   "exports": {
     ".": "./src/index.ts"
