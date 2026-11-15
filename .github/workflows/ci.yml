@@ -1,0 +1,105 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: Lint, types, tests et build
+    runs-on: ubuntu-latest
+    env:
+      SKIP_ENV_VALIDATION: "1"
+      # Base jetable pour les tests d'intégration du journal d'audit.
+      DATABASE_MIGRATION_URL: postgresql://postgres:postgres@localhost:5432/postgres
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm format:check
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm build
+
+  postgres-10:
+    name: Tests et migrations sur PostgreSQL 10
+    runs-on: ubuntu-latest
+    env:
+      SKIP_ENV_VALIDATION: "1"
+      DATABASE_MIGRATION_URL: postgresql://postgres:postgres@localhost:5432/postgres
+    # Le serveur de test tourne sous PostgreSQL 10 : on rejoue tout dessus.
+    services:
+      postgres:
+        image: postgres:10
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # Tests d'intégration (journaux, comptes, équipe) et migrations Prisma sur PostgreSQL 10.
+      - run: pnpm test
+      # L'outil de migration livré avec la release, puis contrôle par Prisma lui-même.
+      - name: Outil de migration livré avec la release
+        env:
+          PGPASSWORD: postgres
+        run: |
+          pnpm --filter worker build
+          psql -h localhost -U postgres -c 'CREATE DATABASE linkaro_migrate_check'
+          export DATABASE_MIGRATION_URL="postgresql://postgres:postgres@localhost:5432/linkaro_migrate_check?schema=public"
+          node apps/worker/dist/migrate.mjs packages/db/prisma/migrations
+          pnpm --filter @linkaro/db exec prisma migrate status
+
+  security:
+    name: Sécurité (dépendances et secrets)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      # Échoue si une dépendance a une vulnérabilité connue de gravité haute ou critique.
+      - run: pnpm audit:deps
+      # Échoue si un secret (clé d'API, mot de passe, token) a été commité.
+      - name: Recherche de secrets (gitleaks)
+        env:
+          GITLEAKS_VERSION: 8.30.1
+          GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
+        run: |
+          curl -sSL -o gitleaks.tgz "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          echo "${GITLEAKS_SHA256}  gitleaks.tgz" | sha256sum --check
+          tar -xzf gitleaks.tgz gitleaks
+          ./gitleaks git . --redact --no-banner

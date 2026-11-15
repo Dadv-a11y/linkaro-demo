@@ -1,0 +1,28 @@
+{
+  "name": "@linkaro/mailer",
+  "version": "0.0.0",
+  "type": "module",
+  "private": true,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@linkaro/env": "workspace:*",
+    "@linkaro/observability": "workspace:*",
+    "nodemailer": "^10.1.7"
+  },
+  "devDependencies": {
+    "@linkaro/eslint-config": "workspace:*",
+    "@linkaro/typescript-config": "workspace:*",
+    "@types/node": "^22.20.5",
+    "@types/nodemailer": "^8.0.2",
+    "eslint": "^10.13.0",
+    "typescript": "^5.9.3",
+    "vitest": "^5.0.5"
+  }
+}

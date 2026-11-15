@@ -1,0 +1,3 @@
+{
+  "extends": "@linkaro/typescript-config/base.json"
+}
